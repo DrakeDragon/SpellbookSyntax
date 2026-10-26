@@ -1,0 +1,1419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Spellbook Syntax</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0a1a; --bg2:#12102a; --card:#171433; --card2:#1d1a40; --line:#2c2860;
+  --text:#ece8ff; --muted:#9a94c9; --gold:#ffcf5a; --gold2:#ff9f43; --teal:#27d3b9; --purple:#7c5cff;
+  --red:#ff5d73; --green:#4be08a; --sky1:#1a1450; --sky2:#3b2a8f; --accent:#ffcf5a;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --serif:'Cinzel',Georgia,'Times New Roman',serif;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:16px;line-height:1.5;overscroll-behavior-y:none}
+body{min-height:100vh;min-height:100dvh}
+#app{max-width:560px;margin:0 auto;min-height:100dvh;position:relative;padding-bottom:calc(76px + var(--sab))}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+code{font-family:var(--mono);background:#0e0c26;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.88em;color:#ffd98a}
+b{color:#fff}
+p{margin:.55em 0}
+h1,h2,h3{font-family:var(--serif);margin:0;letter-spacing:.02em}
+
+/* HUD */
+#hud{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;padding:calc(8px + var(--sat)) 12px 8px;background:linear-gradient(#0b0a1af2,#0b0a1ad9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.lvl{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#ffe29a,#ff9f43 70%);color:#2a1700;font-family:var(--serif);font-weight:800;font-size:18px;box-shadow:0 0 0 3px #2a1700,0 0 18px #ffcf5a66}
+.hudmid{flex:1;min-width:0}
+.hudtop{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.hudname{font-family:var(--serif);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hudmp{color:var(--muted);font-size:12px;white-space:nowrap}
+.bar{height:9px;border-radius:99px;background:#0e0c26;border:1px solid var(--line);overflow:hidden;margin-top:5px}
+.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold));border-radius:99px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.hudbtn{flex:none;width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--line);font-size:16px}
+.py{flex:none;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.py i{width:8px;height:8px;border-radius:50%;background:#ffb84a;display:inline-block;animation:pulse 1s infinite}
+.py.ok i{background:var(--green);animation:none}
+.py.bad i{background:var(--red);animation:none}
+
+/* Dock */
+#dock{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;z-index:40;display:flex;background:#0e0c26f2;backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 6px calc(6px + var(--sab))}
+#dock button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;border-radius:12px;color:var(--muted);font-size:11px}
+#dock button span{font-size:20px;line-height:1.1}
+#dock button.on{color:var(--gold);background:#ffffff0d}
+
+/* Layout bits */
+.view{padding:12px 14px 20px}
+.card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:18px;padding:14px;margin:12px 0;box-shadow:0 6px 24px #0006}
+.card h2{font-size:18px;margin-bottom:6px}
+.muted{color:var(--muted)}
+.row{display:flex;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:14px;font-weight:700;background:linear-gradient(180deg,var(--gold),var(--gold2));color:#2a1700;box-shadow:0 4px 0 #a05a12,0 8px 20px #ff9f4344;transition:transform .08s,box-shadow .08s,opacity .2s;min-height:48px}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #a05a12}
+.btn[disabled]{opacity:.4;pointer-events:none;filter:grayscale(.6)}
+.btn.block{width:100%}
+.btn.ghost{background:var(--card2);color:var(--text);box-shadow:0 3px 0 #0006;border:1px solid var(--line)}
+.btn.teal{background:linear-gradient(180deg,#52f0d6,var(--teal));color:#032a24;box-shadow:0 4px 0 #107a6b,0 8px 20px #27d3b944}
+.btn.small{padding:8px 12px;min-height:38px;font-size:14px;border-radius:12px}
+.tag{display:inline-block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);border:1px solid #ffcf5a55;border-radius:99px;padding:2px 9px}
+
+/* Scene */
+.scene{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:0 8px 30px #0008;background:linear-gradient(var(--sky1),var(--sky2))}
+.scene svg{display:block;width:100%;height:auto}
+.scene .star{animation:twinkle 3s infinite ease-in-out}
+.scene .rune{font-family:var(--mono);fill:#ffffff40;animation:floatup 9s linear infinite}
+.sudo{cursor:pointer}
+.sudo .tail{transform-origin:12px 70px;animation:wag 2.4s ease-in-out infinite}
+.sudo .eyes-happy,.sudo .eyes-shock,.sudo .m-happy,.sudo .m-sad,.sudo .m-shock,.sudo .brows{display:none}
+.scene[data-mood=happy] .eyes-idle{display:none}.scene[data-mood=happy] .eyes-happy{display:inline}
+.scene[data-mood=happy] .m-idle{display:none}.scene[data-mood=happy] .m-happy{display:inline}
+.scene[data-mood=sad] .m-idle{display:none}.scene[data-mood=sad] .m-sad{display:inline}.scene[data-mood=sad] .brows{display:inline}
+.scene[data-mood=shock] .eyes-idle{display:none}.scene[data-mood=shock] .eyes-shock{display:inline}
+.scene[data-mood=shock] .m-idle{display:none}.scene[data-mood=shock] .m-shock{display:inline}
+.scene[data-mood=happy] .sudo{animation:hop .5s ease-out}
+.scene[data-mood=shock] .sudo{animation:shake .4s}
+.bubble{position:absolute;left:10px;right:118px;top:10px;background:#fffdf5;color:#26203d;border-radius:14px;padding:9px 12px;font-size:14px;line-height:1.35;box-shadow:0 4px 14px #0006;min-height:40px}
+.bubble:after{content:"";position:absolute;right:-9px;top:20px;border:9px solid transparent;border-left-color:#fffdf5;border-right:0}
+.bubble b{color:#5b3fd1}
+.bubble .who{display:block;font-family:var(--serif);font-weight:800;font-size:11px;letter-spacing:.1em;color:#7c5cff;margin-bottom:1px}
+
+/* Map */
+.hero h1{font-size:26px;line-height:1.15;margin:14px 2px 2px}
+.hero .sub{color:var(--muted);margin:0 2px 10px}
+.realm{margin:14px 0}
+.realm h3{font-size:15px;color:var(--gold);display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px}
+.realm h3 small{font-family:system-ui;color:var(--muted);font-size:12px}
+.nodes{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.node{aspect-ratio:1;border-radius:16px;display:grid;place-items:center;font-weight:800;font-size:17px;background:var(--card);border:2px solid var(--line);color:var(--muted);position:relative}
+.node.done{background:linear-gradient(180deg,#3a2f12,#2a2208);border-color:var(--gold);color:var(--gold)}
+.node.cur{background:linear-gradient(180deg,#2b2575,#1d1a50);border-color:var(--purple);color:#fff;animation:glow 1.6s infinite}
+.node.boss{border-radius:50%}
+.node.locked{opacity:.45}
+.node small{position:absolute;bottom:2px;font-size:9px;opacity:.8}
+.teaser{border-style:dashed;text-align:center;color:var(--muted)}
+
+/* Lesson */
+.pips{display:flex;gap:6px;margin:12px 0 4px}
+.pip{flex:1;height:6px;border-radius:99px;background:#0e0c26;border:1px solid var(--line)}
+.pip.on{background:var(--gold);border-color:var(--gold)}
+.pip.cur{background:var(--purple);border-color:var(--purple);animation:pulse 1.4s infinite}
+.steptitle{display:flex;align-items:center;justify-content:space-between;margin:6px 2px}
+.steptitle h2{font-size:19px}
+.analogy{border-left:3px solid var(--teal);background:#27d3b911;padding:8px 12px;border-radius:0 12px 12px 0;margin:10px 0;color:#bff7ee}
+.codeblk,.pre{font-family:var(--mono);background:#0a0820;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;overflow:auto;font-size:14px;line-height:1.55;white-space:pre;color:#e8e4ff}
+.opts{display:grid;gap:9px;margin:12px 0}
+.opt{text-align:left;padding:12px 14px;border-radius:14px;background:var(--card2);border:2px solid var(--line);font-weight:600;transition:transform .08s,border-color .15s;min-height:48px}
+.opt:active{transform:scale(.985)}
+.opt.good{border-color:var(--green);background:#4be08a22}
+.opt.bad{border-color:var(--red);background:#ff5d7322;animation:shake .35s}
+.opt[disabled]{pointer-events:none}
+.note{margin:10px 0;padding:10px 12px;border-radius:12px;background:#ffffff0a;border:1px solid var(--line);font-size:14px}
+.note.good{border-color:#4be08a66;background:#4be08a14}
+.note.bad{border-color:#ff5d7366;background:#ff5d7314}
+.checklist{list-style:none;padding:0;margin:10px 0;display:grid;gap:6px}
+.checklist li{display:flex;gap:9px;align-items:flex-start;font-size:14px;padding:7px 10px;border-radius:10px;background:#ffffff08;border:1px solid var(--line)}
+.checklist li.ok{border-color:#4be08a66;background:#4be08a14}
+.checklist li.no{border-color:#ff5d7366;background:#ff5d7314}
+.nav{display:flex;gap:10px;margin-top:14px}
+.nav .btn{flex:1}
+
+/* Editor */
+.ed{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0a0820;margin:10px 0}
+.ed-main{display:flex}
+.ed-gutter{margin:0;padding:10px 8px 10px 10px;font:16px/24px var(--mono);color:#5d588f;text-align:right;user-select:none;background:#0d0a28;border-right:1px solid var(--line);min-width:34px}
+.ed-code{position:relative;flex:1;min-width:0;overflow:hidden}
+.ed-hl,.ed-ta{position:absolute;left:0;top:0;width:100%;height:100%;margin:0;padding:10px 12px;font:16px/24px var(--mono);white-space:pre;tab-size:4;letter-spacing:0;border:0;outline:0}
+.ed-hl{overflow:hidden;pointer-events:none;color:#e8e4ff}
+.ed-ta{background:transparent;color:transparent;caret-color:#fff;resize:none;overflow-x:auto;overflow-y:hidden;-webkit-text-fill-color:transparent;-webkit-appearance:none;border-radius:0}
+.ed-ta::selection{background:#7c5cff66;-webkit-text-fill-color:transparent}
+.ed-sizer{visibility:hidden;white-space:pre;font:16px/24px var(--mono);padding:10px 12px;min-height:44px}
+.tk-c{color:#6f6aa8;font-style:italic}.tk-s{color:#7ff0a8}.tk-n{color:#ffb86b}.tk-k{color:#c792ff}.tk-f{color:#6cc9ff}
+.runes{display:flex;gap:6px;overflow-x:auto;padding:7px 8px;background:#0d0a28;border-top:1px solid var(--line);scrollbar-width:none}
+.runes::-webkit-scrollbar{display:none}
+.rune-btn{flex:none;min-width:40px;height:36px;padding:0 10px;border-radius:10px;background:var(--card2);border:1px solid var(--line);font-family:var(--mono);font-size:15px;color:var(--gold)}
+.rune-btn:active{background:var(--purple)}
+.inputs{margin:8px 0}
+.files{margin:8px 0;border:1px solid var(--line);border-radius:12px;background:#0d0a28;font-size:13px}
+.files summary{padding:8px 12px;cursor:pointer;color:var(--muted)}
+.files .file{padding:0 12px 8px}.files .file b{font-family:var(--mono);color:#ffe27a;font-size:12px}
+.files .file pre{margin:4px 0 0;padding:8px 10px;border-radius:8px;background:#06051a;font:13px/1.45 var(--mono);white-space:pre-wrap;word-break:break-word;color:#d8f7e5;max-height:160px;overflow:auto}
+.inputs label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+.inputs textarea{width:100%;min-height:54px;background:#0a0820;border:1px solid var(--line);border-radius:12px;color:var(--text);font:16px/24px var(--mono);padding:8px 12px;resize:vertical}
+.out{margin:10px 0;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#06051a}
+.out .oh{display:flex;justify-content:space-between;padding:6px 12px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:#0d0a28;border-bottom:1px solid var(--line)}
+.out pre{margin:0;padding:10px 12px;font:14px/1.5 var(--mono);white-space:pre-wrap;word-break:break-word;color:#d8f7e5;min-height:20px;max-height:260px;overflow:auto}
+.out pre.err{color:#ff9aa8}
+.out .help{padding:10px 12px;border-top:1px solid var(--line);font-size:14px;background:#1a0f26;color:#ffd0d8}
+.out .help b{color:#fff}
+.hintbox{margin:8px 0;padding:10px 12px;border-radius:12px;background:#ffcf5a14;border:1px solid #ffcf5a55;font-size:14px}
+.hintbox .pre{margin:6px 0 0}
+
+/* Boss */
+.boss-hud{margin:10px 0;padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,#2a1230,#1a0d26);border:1px solid #ff5d7355}
+.boss-hud .nm{font-family:var(--serif);font-weight:800;color:#ffb3be;display:flex;justify-content:space-between}
+.boss-hud .bar>i{background:linear-gradient(90deg,#ff5d73,#ff9f43)}
+
+/* Power-up */
+.powers{display:grid;gap:10px;margin:10px 0}
+.pu{padding:12px;border-radius:14px;border:1px solid var(--line);background:#ffffff08}
+.pu h4{margin:0 0 4px;font-family:var(--serif);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
+.pu ul{margin:4px 0 0;padding-left:18px}
+.mpgain{font-family:var(--serif);font-size:30px;color:var(--gold);text-align:center;margin:6px 0}
+
+/* Lists */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cx{padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--card);text-align:left;width:100%}
+.cx.locked{opacity:.4}
+.cx h4{margin:0;font-size:15px;font-family:var(--serif)}
+.cx .meta{font-size:11px;color:var(--muted)}
+.ach{display:flex;gap:12px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--card);margin:8px 0;align-items:flex-start}
+.ach .ic{flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;background:#0e0c26;border:2px solid var(--line)}
+.ach.have .ic{border-color:var(--gold);box-shadow:0 0 14px #ffcf5a44}
+.ach.bronze.have .ic{border-color:#cd8b4a}.ach.silver.have .ic{border-color:#c9d3e8}.ach.gold.have .ic{border-color:var(--gold)}
+.ach:not(.have){opacity:.55}
+.ach h4{margin:0;font-size:15px}
+.ach .pr{font-size:12px;color:var(--teal);margin-top:3px}
+.ach .d{font-size:13px;color:var(--muted)}
+.mon{padding:10px;border-radius:14px;border:1px dashed var(--line);text-align:center;background:var(--card);font-size:12px}
+.mon .e{font-size:30px;filter:grayscale(1) brightness(.4)}
+.mon.have{border-style:solid;border-color:#ff5d7366}
+.mon.have .e{filter:none}
+.ladder{display:grid;gap:6px}
+.lv{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:13px}
+.lv .n{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;background:#0e0c26;border:2px solid var(--line)}
+.lv.have .n{background:var(--gold);color:#2a1700;border-color:var(--gold)}
+.lv.cur{border-color:var(--purple)}
+.lv:not(.have){opacity:.55}
+
+/* Overlays + toasts */
+#overlay{position:fixed;inset:0;z-index:100;display:none;place-items:center;background:#05040fd9;backdrop-filter:blur(6px);padding:20px}
+#overlay.on{display:grid}
+.modal{width:100%;max-width:440px;max-height:92dvh;overflow:auto;background:linear-gradient(180deg,#241e5e,#14112f);border:2px solid var(--gold);border-radius:24px;padding:20px;text-align:center;box-shadow:0 0 60px #ffcf5a44;animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+.modal h2{font-size:26px;color:var(--gold)}
+.modal .big{font-family:var(--serif);font-weight:800;font-size:84px;line-height:1;color:var(--gold);text-shadow:0 0 30px #ffcf5a88;margin:6px 0}
+.modal ul{text-align:left;margin:8px 0 14px;padding-left:20px}
+#toasts{position:fixed;top:calc(64px + var(--sat));left:0;right:0;z-index:90;display:grid;gap:8px;justify-items:center;pointer-events:none;padding:0 12px}
+.toast{display:flex;gap:12px;align-items:center;max-width:420px;width:100%;padding:10px 14px;border-radius:16px;background:linear-gradient(180deg,#2c2575,#1b1750);border:1px solid var(--gold);box-shadow:0 8px 30px #000a;animation:slidein .4s cubic-bezier(.2,1.3,.4,1)}
+.toast.out{animation:slideout .35s forwards}
+.toast .ic{font-size:28px}
+.toast b{display:block;font-family:var(--serif);color:var(--gold)}
+.toast span{font-size:13px;color:var(--muted)}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:120}
+
+.loadbox{text-align:center;padding:30px 10px}
+.spin{width:44px;height:44px;border:4px solid var(--line);border-top-color:var(--gold);border-radius:50%;margin:10px auto;animation:spin 1s linear infinite}
+.settings .row{justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+.switch{width:52px;height:30px;border-radius:99px;background:#0e0c26;border:1px solid var(--line);position:relative}
+.switch:after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:.2s}
+.switch.on{background:var(--teal)}.switch.on:after{left:25px;background:#fff}
+input[type=text],.field{width:100%;padding:12px 14px;border-radius:12px;background:#0a0820;border:1px solid var(--line);color:var(--text);font:inherit;font-size:16px}
+textarea.field{font-family:var(--mono);font-size:13px;min-height:90px}
+
+@keyframes pulse{50%{opacity:.45}}
+@keyframes twinkle{50%{opacity:.2}}
+@keyframes floatup{from{transform:translateY(0);opacity:0}15%{opacity:1}to{transform:translateY(-170px);opacity:0}}
+@keyframes wag{50%{transform:rotate(9deg)}}
+@keyframes hop{30%{transform:translateY(-14px)}}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes glow{50%{box-shadow:0 0 18px #7c5cffaa}}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+@keyframes slidein{from{transform:translateY(-30px);opacity:0}}
+@keyframes slideout{to{transform:translateY(-30px);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hud"></header>
+  <main id="view"></main>
+  <nav id="dock"></nav>
+</div>
+<div id="toasts"></div>
+<div id="overlay"></div>
+<canvas id="fx"></canvas>
+
+<script>
+(()=>{
+'use strict';
+/* =================================================================
+   SPELLBOOK SYNTAX — engine (Stage 9: Realms 0–14)
+   Lessons are data (LESSONS). The engine never changes per lesson.
+   ================================================================= */
+const PYO = 'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/';
+const RUNNER_PY = __RUNNER_JSON__;
+const LESSONS = __LESSONS_JSON__;
+const SAVE_KEY = 'spellbook-syntax-v1';
+
+/* ---------- tiny helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+function h(tag, a, ...kids){
+  const e = document.createElement(tag);
+  if (a) for (const k in a){
+    const v = a[k];
+    if (k === 'class') e.className = v;
+    else if (k === 'html') e.innerHTML = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat(Infinity)){ if (c == null || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(c)); }
+  return e;
+}
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const clamp = (n,a,b) => Math.max(a, Math.min(b, n));
+const todayStr = () => { const d = new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+/* ---------- code highlighting ---------- */
+const KW = 'and|or|not|in|is|if|elif|else|for|while|def|return|import|from|as|True|False|None|break|continue|pass|class|try|except|finally|with|lambda|match|case';
+const BI = 'print|input|int|float|str|type|round|abs|min|max|len|range|sum|sorted|list|dict|set|tuple|bool';
+const HL_RE = new RegExp('(#[^\\n]*)|("(?:[^"\\\\\\n]|\\\\.)*"?|\'(?:[^\'\\\\\\n]|\\\\.)*\'?)|(\\b\\d+(?:\\.\\d+)?\\b)|(\\b(?:'+KW+')\\b)|(\\b(?:'+BI+')\\b(?=\\())', 'g');
+function hl(code){
+  let out = '', last = 0, m;
+  HL_RE.lastIndex = 0;
+  while ((m = HL_RE.exec(code))){
+    out += esc(code.slice(last, m.index));
+    const cls = m[1] ? 'c' : m[2] ? 's' : m[3] ? 'n' : m[4] ? 'k' : 'f';
+    out += '<span class="tk-'+cls+'">'+esc(m[0])+'</span>';
+    last = m.index + m[0].length;
+    if (m[0].length === 0) HL_RE.lastIndex++;
+  }
+  return out + esc(code.slice(last));
+}
+function inlineMd(t){
+  const codes = [];
+  t = esc(t).replace(/`([^`]+)`/g, (m,c) => { codes.push(c); return '\u0000'+(codes.length-1)+'\u0000'; });
+  t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\*([^*\n]+)\*/g, '<i>$1</i>');
+  t = t.replace(/\u0000(\d+)\u0000/g, (m,i) => '<code>'+codes[+i]+'</code>');
+  return t.split(/\n\n+/).map(block => {
+    let html = '', list = [];
+    const flush = () => { if (list.length){ html += '<ul>'+list.map(x => '<li>'+x+'</li>').join('')+'</ul>'; list = []; } };
+    let para = [];
+    const flushP = () => { if (para.length){ html += '<p>'+para.join('<br>')+'</p>'; para = []; } };
+    block.split('\n').forEach(line => { if (/^- /.test(line)){ flushP(); list.push(line.slice(2)); } else { flush(); para.push(line); } });
+    flush(); flushP(); return html;
+  }).join('');
+}
+function md(s){
+  return String(s).split(/```\n?/).map((p,i) => i%2 ? '<pre class="codeblk">'+hl(p.replace(/\n$/,''))+'</pre>' : inlineMd(p)).join('');
+}
+
+/* ---------- save data ---------- */
+const defaults = () => ({v:1, name:'', mp:0, done:{}, ach:{}, bestiary:{}, echo:{day:'', n:0}, echoSeen:{},
+  stats:{sandbox:0, clean:0, bugs:0, predictOK:0, echoOK:0, codex:0, tapSudo:0}, codexSeen:{}, portfolio:{}, settings:{sound:true, vib:true}, lastVisit:0});
+let S = (() => { try { const r = localStorage.getItem(SAVE_KEY); if (r) { const o = JSON.parse(r); return Object.assign(defaults(), o, {stats:Object.assign(defaults().stats, o.stats||{}), settings:Object.assign(defaults().settings, o.settings||{})}); } } catch(e){} return defaults(); })();
+function save(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch(e){} }
+const longGap = S.lastVisit && (Date.now() - S.lastVisit) > 14*864e5;
+S.lastVisit = Date.now(); save();
+
+/* ---------- levels, ranks ---------- */
+const LEVELS = [
+ ['Spark','Run Python and read your first error'],['Lantern-Lighter','Print and format text, use Python as a calculator'],['Number-Whisperer','Store and compute values with variables'],['Talker','Write programs that ask questions and respond'],
+ ['Gate-Opener','Make programs decide with if/elif/else'],['Rune-Reader','Combine conditions and validate user input'],['Loop-Weaver','Repeat work with while and for loops'],['Corridor-Walker','Build complete interactive programs'],
+ ['Satchel-Packer','Store many items in lists'],['Index-Keeper','Slice, sort, search and edit lists'],['Tuple-Binder','Group fixed data and unpack it'],['Dict-Delver','Look up data by key'],['Set-Sifter','Dedupe and compare data'],['Comprehender','Transform data in one readable line'],
+ ['Scroll-Scribe','Clean, split and format real text'],['Pattern-Hunter','Extract emails, dates and phone numbers with regex'],['Ritualist','Write reusable functions'],['Argument-Master','Design flexible function inputs'],['Scope-Warden','Avoid classic variable and mutation bugs'],['Recursion-Seer','Solve self-similar problems'],['Ward-Raiser','Make programs fail gracefully'],
+ ['Archivist','Read and write files safely'],['CSV-Cartographer','Process spreadsheet data'],['JSON-Speaker','Read and write the data format apps use'],['Library-Walker','Use the standard library like a pro'],['Time-Keeper','Work with dates and times'],['Module-Mason','Split code across files and packages'],
+ ['Guild-Initiate','Create your own classes'],['Heir','Use inheritance wisely'],['Composer','Design with composition'],['Magic-Wielder','Make objects behave like built-ins'],['Dataclass-Smith','Model data the modern way'],['Iterator-Binder','Stream big data with generators'],['Decorator-Adept','Write decorators and context managers'],
+ ['Type-Warden','Write typed, self-documenting code'],['Environment-Builder','Manage environments and dependencies'],['Version-Keeper','Use git for real workflows'],['Test-Knight','Write automated tests'],['Linter-Sage','Keep code clean with tooling'],['CLI-Crafter','Ship a command-line tool'],
+ ['Web-Caller','Work with web APIs'],['Data-Alchemist','Analyze data with pandas'],['Query-Master','Store and query data with SQL'],['Automator','Automate real tasks'],['Pipeline-Builder','Build fetch-clean-store-report pipelines'],
+ ['Complexity-Seer','Judge code speed with Big-O'],['Structure-Sage','Choose and build the right data structures'],['Optimizer','Profile and speed up slow code'],['Architect','Design clean multi-module systems'],['Archmage','Pass interviews with a finished portfolio'],['Clockwork Adept','Write generators, coroutines and a hand-built event loop'],['Gate-Warden','Parse requests, route URLs, validate input and build middleware'],['Number-Weaver','Analyse data with NumPy and statistics and build simple models'],['Guildmaster','Craft professional Python: dataclasses, types, logging and patterns']];
+const BUILD = {
+ 1:['A greeting that prints your name','A text banner for a project','A 3-line poem spell'],
+ 2:['A receipt that prints a few lines of prices','A dad-joke teller (several prints)','A calculator spell for your monthly bills'],
+ 3:['A tip splitter','A shopping total with tax','A unit converter (miles to km)'],
+ 4:['A personalized greeting that asks your name','A bill splitter for friends','A temperature converter'],
+ 5:['A "can I ride this ride?" height checker','A grade letter calculator','A simple text adventure with choices'],
+ 6:['A login checker with validation','An age-group classifier','A discount calculator with rules'],
+ 7:['A number-guessing game','A times-table printer','A countdown timer'],
+ 8:['A mini quiz game','A savings goal tracker','A password strength checker'],
+ 9:['A to-do list manager','A shopping list with add and remove','A high-score table'],
+ 10:['A leaderboard that sorts scores','A playlist shuffler','A list statistics report (min, max, average)'],
+ 11:['A coordinates tracker using tuples','A contact list of (name, phone) pairs','A pair-up tool using zip'],
+ 12:['A phone book with lookups','A word-frequency counter','A simple inventory with stock levels'],
+ 13:['A duplicate remover','A "who is in both lists?" tool','A tag cloud counter'],
+ 14:['A one-line data cleaner','A gradebook with a ranked report','A product catalogue filtered by price'],
+ 15:['A text cleaner and slug maker','A name-formatter ("Last, First" to "First Last")','A caesar-cipher tool'],
+ 16:['A contact extractor for emails and phones','A log-file parser','A receipt printer with aligned columns'],
+ 17:['A reusable toolkit of small helper functions','A tip calculator as a function with defaults','A text formatter you can call anywhere'],
+ 18:['A flexible report builder with *args and **kwargs','A URL builder with keyword options','A password checker using any() and all()'],
+ 19:['A "tag adder" without the mutable-default trap','A counter factory using closures','A calculator driven by a dictionary of functions'],
+ 20:['A countdown and a factorial, recursively','A folder-tree style printer for nested lists','A fast memoised Fibonacci'],
+ 21:['A crash-proof input helper','A dirty-data summariser that reports bad rows','A text adventure with rooms, items and commands'],
+ 22:['A to-do list that remembers between runs','A file word-counter','A settings-file reader with defaults'],
+ 23:['A sales report built from a CSV file','A CSV cleaner that skips bad rows','A grade book that writes its own CSV'],
+ 24:['A contact book saved as JSON','A CSV-to-JSON converter','A safe loader for damaged config files'],
+ 25:['A dice roller using random and Counter','A card-dealing game','A command history using a deque'],
+ 26:['A deadline tracker that flags late jobs','A birthday and age calculator','A schedule shifter that crosses midnight'],
+ 27:['A log analyser with Counter and JSON','An expense tracker exact to the cent','A multi-file toolkit that you import'],
+ 28:['A bank account with validated deposits','A class-based inventory','A temperature class with a validated property'],
+ 29:['An RPG hero hierarchy (warrior, mage, archer)','A shape library with one describe() for all','A battle arena with knights and rogues'],
+ 30:['A hero with swappable weapon and armor','A creature built from small ability mixins','A library system with books and loans'],
+ 31:['A Vector class that supports +, - and *','A card deck that works with len(), [ ] and in','A grimoire you can loop over'],
+ 32:['A typed quest log with an Enum status','A frozen, sortable Version class','A hero roster saved and loaded as JSON'],
+ 33:['An endless prime-number stream','A log analyser that streams a huge file','A multi-stage text-cleaning pipeline'],
+ 34:['A command registry built with a decorator','A retry-and-cache toolkit','A call-logging decorator that keeps names'],
+ 35:['An all-or-nothing transaction manager','A fully type-hinted utility module','A print-capturing test helper'],
+ 36:['A project setup checker that reads requirements.txt','A dependency auditor that flags loose version pins','A settings loader with defaults, file and environment layers'],
+ 37:['A tiny version-control tool that hashes and stores commits','A diff viewer for two versions of a file','A release-tagger that bumps semantic versions'],
+ 38:['A test suite for one of your old programs','A fake-clock test for a date function','A bug-hunting kit that catches regressions'],
+ 39:['A tiny linter that flags long lines and bad names','A docstring checker built on the ast module','A formatter that trims trailing whitespace'],
+ 40:['A to-do manager with add, list and done commands','A file-search tool with options and exit codes','A command-line unit converter'],
+ 41:['A weather or news fetcher that survives errors','A paginated API reader','A retrying client with exponential backoff'],
+ 42:['A sales analyser with pandas','A CSV cleaner that reports dropped rows','A per-region summary with groupby and merge'],
+ 43:['A database-backed library catalogue','A safe search form that is immune to SQL injection','A bank transfer that never loses a coin'],
+ 44:['A downloads-folder organiser that never overwrites','A nightly inbox processor you can safely run twice','A backup script that verifies its zip'],
+ 45:['A complete CSV to database to report pipeline','A mail-merge letter generator','A data-quality checker with a reject log'],
+ 46:['A speed test that times a list against a set','A duplicate finder that works on a million rows','A step counter that proves O(n) versus O(n squared)'],
+ 47:['A bracket checker for your own code files','An autocomplete box built on a trie','A shortest-route finder for a map of rooms'],
+ 48:['A profiler that times two versions of the same function','A cached solver for a slow recursive puzzle','A log summariser that streams instead of loading everything'],
+ 49:['A layered inventory app (storage, rules, interface)','A tiny test runner with PASS, FAIL and ERROR','A vending machine with its own exception family'],
+ 50:['A practice set of ten interview questions solved on a whiteboard','A polished README for your best project','A portfolio page exported from your finished missions'],
+ 51:['A download simulator that compares 1, 2 and 3 workers','A tiny scheduler for your own generators','A timeout-aware task runner'],
+ 52:['A mini web framework with routes and middleware','A signup validator that lists every problem','A book-library REST API'],
+ 53:['A house-price predictor from a messy CSV','A k-NN classifier for your own labelled data','A report on precision and recall for a yes/no model'],
+ 54:['A task tracker with a saved JSON file','An event bus for a small game','A property test for a function you wrote']};
+const THRESH = [0,110,230,360,480,600,720,840,910,980,1050,1090,1150,1190,1310,1445,1590,1700,1815,1940,2085,2235,2400,2508,2657,2819,2873,3085,3265,3310,3337,3441,3504,3549,3621,3698,3752,3815,3914,3968,4031,4094,4157,4238,4292,4378,4450,4540,4603,4675,4983,5073,5163,5253];
+const lvStart = l => l <= THRESH.length ? THRESH[l-1] : 5253 + (l-54)*250;
+function levelFor(mp){ let l = 1; while (l < 54 && mp >= lvStart(l+1)) l++; return l; }
+function rankFor(l){ return l<=8?'Apprentice':l<=21?'Journeyman':l<=34?'Adept':l<=45?'Artisan':l<=50?'Archmage':'Guildmaster'; }
+
+/* ---------- achievements & bestiary ---------- */
+const ACH = [
+ {id:'first_spell',n:'First Spell',t:'bronze',ic:'✨',d:'Run your first program.',p:'You can execute code.'},
+ {id:'spell_slinger',n:'Spell-Slinger',t:'bronze',ic:'🎯',d:'Pass a Write challenge on your first try with no hints.',p:'Precision under pressure.'},
+ {id:'level2',n:'Rising',t:'bronze',ic:'🌱',d:'Reach Level 2.',p:'You have the basics of printing and calculating.'},
+ {id:'realm0',n:'Lantern-Lighter',t:'gold',ic:'🏮',d:'Defeat the Dark Lantern (Realm 0 boss).',p:'You can write, run and debug basic Python output.'},
+ {id:'no_crutches0',n:'No Crutches',t:'silver',ic:'🦯',d:'Finish Realm 0 using zero hints.',p:'You can work things out from what you already know.'},
+ {id:'realm1',n:'Golem-Breaker',t:'gold',ic:'🗿',d:'Defeat the Tip Calculator Golem (Realm 1 boss).',p:'You can build input → process → output programs.'},
+ {id:'realm2',n:'Gate-Opener',t:'gold',ic:'🚪',d:'Defeat the Gatekeeper (Realm 2 boss).',p:'You can make programs decide with if, elif, else and logic.'},
+ {id:'realm3',n:'Warden-Breaker',t:'gold',ic:'♾️',d:'Defeat the Endless Corridor (Realm 3 boss).',p:'You can repeat, count, search and simulate with loops.'},
+ {id:'realm4',n:'Hoard-Breaker',t:'gold',ic:'🎒',d:'Defeat the Hoarder of Pockets (Realm 4 boss).',p:'You can store, count, rank and reshape data with lists, dicts and sets.'},
+ {id:'satchel_seal',n:'Satchel-Master',t:'gold',ic:'🧳',d:'Pass the Satchel Trial (Realm 4 Gap Check).',p:'You can organise real data with every core collection.'},
+ {id:'records_keeper',n:'Records Keeper',t:'silver',ic:'📒',d:'Finish the Inventory Tracker and Gradebook missions.',p:'You can build record-keeping programs from lists of dicts.'},
+ {id:'realm5',n:'Wraith-Cutter',t:'gold',ic:'🖋️',d:'Defeat the Ink Wraith (Realm 5 boss).',p:'You can clean, search, format and parse text.'},
+ {id:'scribe_seal',n:'Scribe\'s Seal',t:'gold',ic:'📜',d:'Pass the Scriptorium Trial (Realm 5 Gap Check).',p:'You can handle text, formats and regular expressions.'},
+ {id:'realm6',n:'Anvil-Breaker',t:'gold',ic:'🔨',d:'Defeat the Tangled Anvil (Realm 6 boss).',p:'You can design functions with parameters, defaults, closures and tests.'},
+ {id:'forge_seal',n:'Forge-Master',t:'gold',ic:'⚒️',d:'Pass the Forge Trial (Realm 6 Gap Check).',p:'You can build clean, reusable functions.'},
+ {id:'realm7',n:'Mirror-Breaker',t:'gold',ic:'🪞',d:'Defeat the Mirror Warden (Realm 7 boss).',p:'You can recurse and handle errors.'},
+ {id:'ward_seal',n:'Ward-Raiser',t:'gold',ic:'🛡️',d:'Pass the Ward Trial (Realm 7 Gap Check).',p:'You can write programs that fail gracefully.'},
+ {id:'realm8',n:'Wyrm-Breaker',t:'gold',ic:'🐉',d:'Defeat the Ledger Wyrm (Realm 8 boss).',p:'You can read, write and transform files, CSV and JSON.'},
+ {id:'archive_seal',n:'Archivist\'s Seal',t:'gold',ic:'🗄️',d:'Pass the Archive Trial (Realm 8 Gap Check).',p:'You can make programs remember things safely.'},
+ {id:'csv_cartographer',n:'CSV Cartographer',t:'silver',ic:'🗺️',d:'Finish the Sales Report mission.',p:'You can turn a spreadsheet into a report.'},
+ {id:'realm9',n:'Colossus-Breaker',t:'gold',ic:'⚙️',d:'Defeat the Cog Colossus (Realm 9 boss).',p:'You can pull the right tool out of the standard library.'},
+ {id:'workshop_seal',n:'Workshop Seal',t:'gold',ic:'🔧',d:'Pass the Workshop Trial (Realm 9 Gap Check).',p:'You can use and write modules with confidence.'},
+ {id:'time_lord',n:'Time Lord',t:'silver',ic:'⏳',d:'Finish the Deadline Tracker mission.',p:'You can do real arithmetic with dates.'},
+ {id:'exact_cent',n:'Exact to the Cent',t:'gold',ic:'🪙',d:'Finish the Expense Tracker capstone.',p:'You can combine csv, dates, exact money and JSON in one tool.'},
+ {id:'realm10',n:'Hydra-Breaker',t:'gold',ic:'🐲',d:'Defeat the Hydra of Hidden State (Realm 10 boss).',p:'You can design classes with validation, inheritance and contracts.'},
+ {id:'guildhall_seal',n:'Guildhall Seal',t:'gold',ic:'🏛️',d:'Pass the Guildhall Trial (Realm 10 Gap Check).',p:'You can think and build in objects.'},
+ {id:'guild_banker',n:'Guild Banker',t:'silver',ic:'🏦',d:'Finish the Guild Bank mission.',p:'You can build cooperating classes whose transfers never lose a coin.'},
+ {id:'arena_master',n:'Arena Master',t:'silver',ic:'🤺',d:'Finish the Battle Arena mission.',p:'You can combine inheritance, overriding and super() in one design.'},
+ {id:'realm11',n:'Golem-Breaker II',t:'gold',ic:'🗿',d:'Defeat the Gatekeeper Golem (Realm 11 boss).',p:'You can write with dataclasses, generators, decorators and context managers.'},
+ {id:'gate_seal',n:'Iterator Gate Seal',t:'gold',ic:'🚪',d:'Pass the Iterator Gate Trial (Realm 11 Gap Check).',p:'You can write the elegant Python that professionals write.'},
+ {id:'realm12',n:'Gatewright-Breaker',t:'gold',ic:'🏗️',d:'Defeat the Gatewright Colossus (Realm 12 boss).',p:'You can version, test, query and automate like a working developer.'},
+ {id:'master_gate_seal',n:'Master Gate Seal',t:'gold',ic:'🔑',d:'Pass the Master Gate Trial (Realm 12 Gap Check).',p:'You hold the professional toolbox: environments, git, tests, CLIs, APIs, pandas and SQL.'},
+ {id:'realm13',n:'Dragon of Whiteboards',t:'gold',ic:'🎓',d:'Defeat the Interview Dragon (Realm 13 boss).',p:'You can reason about complexity, data structures and classic interview patterns.'},
+ {id:'arena_seal',n:'Arena Seal',t:'gold',ic:'🏟️',d:'Pass the Interview Arena Trial (Realm 13 Gap Check).',p:'You hold the interview toolkit: Big-O, structures, patterns, DP, clean design and portfolio craft.'},
+ {id:'archmage',n:'Archmage of Python',t:'gold',ic:'🧙',d:'Pass the final Gap Check of the whole Spellbook.',p:'You can take Python from a blank file to a tested, documented, interview-ready project.'},
+ {id:'interview_survivor',n:'Interview Survivor',t:'silver',ic:'🎤',d:'Beat both Mock Interviews (Realm 13).',p:'You can solve medium interview questions while explaining your thinking.'},
+ {id:'portfolio_ready',n:'Portfolio Ready',t:'silver',ic:'📁',d:'Export 3 finished missions as a portfolio.',p:'You have a shareable page that proves what you can build.'},
+ {id:'ledger_fixer',n:'Ledger Fixer',t:'silver',ic:'🧾',d:'Finish the Slow Ledger mission.',p:'You can find and remove a hidden quadratic slowdown.'},
+ {id:'autocomplete_oracle',n:'Autocomplete Oracle',t:'silver',ic:'🔮',d:'Finish the Autocomplete Oracle mission.',p:'You can build a trie that answers prefix questions instantly.'},
+ {id:'lag_hunter',n:'Lag Hunter',t:'silver',ic:'⏱️',d:'Finish the Lag Hunt mission.',p:'You can turn a slow report into a one-pass program.'},
+ {id:'arena_architect',n:'Arena Architect',t:'silver',ic:'🏗️',d:'Finish the Arena Inventory mission.',p:'You can design a layered application with injected storage and clear errors.'},
+ {id:'page_publisher',n:'Page Publisher',t:'gold',ic:'🌐',d:'Finish the Portfolio Page mission.',p:'You can generate a safe, escaped web page from data.'},
+ {id:'realm14',n:'Chimera Tamer',t:'gold',ic:'🦁',d:'Defeat the Four-Door Chimera (Realm 14 boss).',p:'You can switch between async, web, data and craft thinking in one sitting.'},
+ {id:'doors_seal',n:'Four Doors Seal',t:'gold',ic:'🚪',d:'Pass the Four Doors Trial (Realm 14 Gap Check).',p:'You hold breadth across async programming, web backends, data science basics and professional craft.'},
+ {id:'guildmaster',n:'Guildmaster',t:'gold',ic:'🏅',d:'Complete all four guilds: every Realm 14 mission and the Gap Check.',p:'You can specialise in any direction and build real software.'},
+ {id:'clockmaker',n:'Clockmaker',t:'silver',ic:'⏳',d:'Finish the Download Simulator mission.',p:'You can build an event loop with a virtual clock and a worker pool.'},
+ {id:'server_smith',n:'Server Smith',t:'silver',ic:'🛠️',d:'Finish the Mini Web Framework mission.',p:'You can route, dispatch and handle errors like a web framework.'},
+ {id:'data_diviner',n:'Data Diviner',t:'silver',ic:'🔮',d:'Finish the House Price Predictor mission.',p:'You can clean data, fit a model and report its error honestly.'},
+ {id:'taskmaster',n:'Taskmaster',t:'silver',ic:'📋',d:'Finish the Task Tracker Core mission.',p:'You can combine dataclasses, enums, match and JSON into a real tool.'},
+ {id:'dep_auditor',n:'Dependency Auditor',t:'silver',ic:'📦',d:'Finish the Dependency Auditor mission.',p:'You can read, pin and audit a project\'s dependencies.'},
+ {id:'mini_git',n:'Mini-Git',t:'silver',ic:'🌿',d:'Finish the Mini-Git mission.',p:'You understand how version control really works inside.'},
+ {id:'bug_zookeeper',n:'Bug Zookeeper',t:'silver',ic:'🦓',d:'Finish the Bug Zoo mission.',p:'You can write tests that catch real bugs.'},
+ {id:'spell_linter',n:'Linter-Smith',t:'silver',ic:'🧹',d:'Finish the Spell Linter mission.',p:'You can build tools that check other code.'},
+ {id:'toolsmith',n:'Toolsmith',t:'gold',ic:'🧰',d:'Build a command-line tool (the Task Keeper mission).',p:'You can ship a real command-line program with subcommands and exit codes.'},
+ {id:'api_whisperer',n:'API Whisperer',t:'silver',ic:'📡',d:'Finish the Gazette Gatherer mission.',p:'You can talk to web APIs defensively: statuses, pages, retries.'},
+ {id:'data_wrangler',n:'Data Wrangler',t:'gold',ic:'🐼',d:'Clean and analyse a messy dataset (the Treasury Ledger mission).',p:'You can turn messy data into trustworthy numbers with pandas.'},
+ {id:'guild_librarian',n:'Guild Librarian',t:'silver',ic:'📚',d:'Finish the Guild Library database mission.',p:'You can design tables and run an application on top of SQL.'},
+ {id:'night_watch',n:'Night Watchman',t:'silver',ic:'🌙',d:'Finish the Night Watch automation mission.',p:'You can write automation that is safe to run twice.'},
+ {id:'gatewright',n:'Pipeline Gatewright',t:'gold',ic:'⚙️',d:'Finish the Gatewright\'s Pipeline mission.',p:'You can build a validate-load-report pipeline from scratch.'},
+ {id:'quest_keeper',n:'Quest Keeper',t:'silver',ic:'📋',d:'Finish the Quest Log mission.',p:'You can model records and states with dataclasses and enums.'},
+ {id:'stream_smith',n:'Stream Smith',t:'silver',ic:'🌊',d:'Finish the Log Pipeline mission.',p:'You can process huge files lazily with generator pipelines.'},
+ {id:'journeyman_seal',n:'Journeyman Seal',t:'gold',ic:'🧭',d:'Finish the Journeyman project: the Text Adventure.',p:'You can build a complete interactive program from data, functions and loops.'},
+ {id:'memo_mage',n:'Memo Mage',t:'silver',ic:'🧠',d:'Make Fibonacci fast with memoisation.',p:'You know how to stop repeating work.'},
+ {id:'pattern_hunter',n:'Pattern Hunter',t:'silver',ic:'🏹',d:'Extract emails and phone numbers with regex.',p:'You can pull structured data out of messy text.'},
+ {id:'apprentice_seal',n:'Apprentice Seal',t:'gold',ic:'🔰',d:'Pass the Apprentice Gap Check (end of Realm 3).',p:'You have the complete foundations of programming: store, decide, repeat.'},
+ {id:'hired_hand',n:'Hired Hand',t:'silver',ic:'💼',d:'Finish a Real-World Mission.',p:'You can turn real business rules into working code.'},
+ {id:'loop_survivor',n:'Loop Survivor',t:'silver',ic:'🌀',d:'Meet an infinite loop and escape it.',p:'You know the cure for the most common runaway bug.'},
+ {id:'gap_free',n:'Gap-Free',t:'gold',ic:'🧱',d:'Pass a Gap Check on your first attempt.',p:'Your foundations have no holes.'},
+ {id:'clean_cast',n:'Clean Cast',t:'silver',ic:'🧼',d:'Finish 10 lessons in a row without a single hint.',p:'You solve problems from knowledge, not from hints.'},
+ {id:'phoenix',n:'Phoenix',t:'silver',ic:'🔥',d:'Fail a challenge 5 times, then solve it.',p:'Resilience, the real programming skill.'},
+ {id:'debuggers_eye',n:"Debugger's Eye",t:'silver',ic:'🔍',d:'Fix 10 broken spells.',p:'You can find and fix bugs.'},
+ {id:'monster_collector',n:'Monster Collector',t:'silver',ic:'👾',d:'Add 4 different errors to your Bug Bestiary.',p:'You can diagnose different kinds of failures.'},
+ {id:'speed_reader',n:'Speed-Reader',t:'silver',ic:'👁️',d:'Predict code output correctly 20 times (first try).',p:'You can read code and know what it does.'},
+ {id:'echo_keeper',n:'Echo Keeper',t:'silver',ic:'🔔',d:'Answer 10 Echoes correctly.',p:'Your memory holds, not just your first pass.'},
+ {id:'welcome_back',n:'Welcome Back',t:'bronze',ic:'🌅',d:'Return after 14+ days away and ace an Echo.',p:'Skills stick, even after a break.'},
+ {id:'codex_keeper',n:'Codex Keeper',t:'bronze',ic:'📖',d:'Read 10 Codex cards.',p:'You are building a reference you can reuse.'},
+ {id:'sandbox_tinkerer',n:'Sandbox Tinkerer',t:'bronze',ic:'🧪',d:'Run 10 experiments in the Sandbox.',p:'You learn by trying things.'},
+ {id:'tap_sudo',n:'Ferret Whisperer',t:'bronze',ic:'🐾',secret:true,d:'Poke Sudo seven times.',p:'Curiosity is a developer virtue.'},
+];
+const ACH_FUTURE = [];
+const BEAST = [['SyntaxError','👹'],['IndentationError','🧟'],['NameError','👻'],['TypeError','🦎'],['ValueError','🐙'],['ZeroDivisionError','🕳️'],['IndexError','🦂'],['KeyError','🗝️'],['AttributeError','🧌'],['FileNotFoundError','🌫️'],['SpellTimeout','♾️'],['RecursionError','🌀'],['ImportError','📦'],['ModuleNotFoundError','📦'],['JSONDecodeError','🧾'],['StopIteration','🛑'],['NotImplementedError','🚧'],['FrozenInstanceError','🧊'],['OperationalError','🗄️'],['IntegrityError','🔒'],['SystemExit','🚪']];
+const ERR_HELP = {
+ SyntaxError:"Python can't understand the shape of a line. Look for a missing or extra quote, bracket or parenthesis. The real mistake is often on the line <b>above</b> the arrow.",
+ IndentationError:"Spaces at the start of a line don't match what Python expects. For now, keep every line flush left unless you are making a block.",
+ RecursionError:"A function kept calling itself and never stopped. Check that it has a <b>base case</b>, and that every call moves closer to it.",
+ UnboundLocalError:"A function used a local name before giving it a value. Assign it first inside the function, or pass it in as a parameter.",
+ AssertionError:"An <code>assert</code> check failed: something you believed was true is not. Print the values just before it.",
+ NameError:"Python met a name it doesn't know. Check spelling and capitals, and make sure the variable was created <b>before</b> this line.",
+ TypeError:"You mixed types that don't mix, like adding text to a number. Convert with <code>int()</code>, <code>float()</code> or <code>str()</code>.",
+ ValueError:"The type is right but the content is wrong, like <code>int(\"hello\")</code>. Check what the text actually contains.",
+ ZeroDivisionError:"You divided by zero. Check the number on the right of the /.",
+ EOFError:"<code>input()</code> wanted an answer but the <b>Inputs</b> box ran out. Add one line per input() your code runs.",
+ SpellTimeout:"Your spell ran too long. Is there a loop that never ends?",
+ IndexError:"You asked for a position that doesn't exist. A list of 3 items has positions 0, 1 and 2. Use <code>len()</code> to check, or <code>[-1]</code> for the last item.",
+ KeyError:"That key isn't in the dictionary. Check the spelling, or use <code>d.get(key)</code> which returns None instead of crashing.",
+ ModuleNotFoundError:"Python can't find that module. Check the spelling, that the file ends in <code>.py</code> and sits in your folder, or that a package folder has its own <code>__init__.py</code>. Third-party packages must be installed with pip first.",
+ JSONDecodeError:"That text isn't valid JSON. JSON needs <b>double quotes</b>, no trailing commas, and <code>true</code>/<code>false</code>/<code>null</code> in lower case. Print the text first to see what you really have.",
+ StopIteration:"A generator or iterator ran out of values and you asked for one more. A <code>for</code> loop handles this for you; with <code>next()</code> pass a default, like <code>next(it, None)</code>.",
+ NotImplementedError:"A base class method says subclasses must provide their own version. Define a method with the same name in your subclass.",
+ FrozenInstanceError:"This dataclass is frozen, so its fields can't be changed. Make a modified copy with <code>dataclasses.replace(obj, field=value)</code>.",
+ OperationalError:"The database could not run your SQL. Check the spelling of table and column names, the order of clauses (<code>SELECT, FROM, WHERE, GROUP BY, ORDER BY, LIMIT</code>) and that the table was created first.",
+ IntegrityError:"The database refused the row because it breaks a rule: a duplicate in a <code>UNIQUE</code> column, a missing <code>NOT NULL</code> value or a failed <code>CHECK</code>. Catch <code>sqlite3.IntegrityError</code> and report it kindly.",
+ ProgrammingError:"The number of <code>?</code> placeholders and the values you passed don't match, or the query was malformed. Count them: one value per <code>?</code>, inside a tuple.",
+ FileExistsError:"That file or folder is already there. Use <code>mkdir(exist_ok=True)</code>, or check <code>.exists()</code> first.",
+ SystemExit:"The program asked to stop (<code>sys.exit</code>, or argparse rejecting bad arguments). That is how command-line tools report errors; the number is the exit code.",
+ AttributeError:"That kind of value doesn't have that method. Check the type with <code>print(type(x))</code>: you may have a list where you expected text, or the other way round.",
+};
+function award(id){
+  if (S.ach[id]) return; const a = ACH.find(x => x.id === id); if (!a) return;
+  S.ach[id] = Date.now(); save(); sfx.ach(); vib([20,30,20]);
+  toast(a.ic, 'Achievement: '+a.n, a.p); fx.burst(innerWidth/2, 120, {n:36, colors:['#ffcf5a','#ff9f43','#fff'], spread:5});
+}
+
+/* ---------- sound / haptics / toast ---------- */
+let actx = null;
+function ac(){ if (!actx){ try { actx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){} } return actx; }
+function tone(f, d=.12, type='sine', v=.05, delay=0){
+  if (!S.settings.sound) return; const c = ac(); if (!c) return;
+  try { const t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t+.01); g.gain.exponentialRampToValueAtTime(0.0001, t+d);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+d+.02); } catch(e){}
+}
+const sfx = {
+  tap(){ tone(520,.04,'square',.015); },
+  ok(){ tone(660,.1,'triangle',.06); tone(880,.16,'triangle',.06,.09); },
+  bad(){ tone(190,.2,'sawtooth',.045); },
+  hit(){ tone(140,.12,'square',.06); tone(90,.18,'sawtooth',.06,.06); },
+  level(){ [523,659,784,1047,1319].forEach((f,i) => tone(f,.22,'triangle',.07,i*.1)); },
+  ach(){ [880,1175,1568].forEach((f,i) => tone(f,.16,'sine',.06,i*.08)); },
+};
+function vib(p){ if (S.settings.vib && navigator.vibrate) try { navigator.vibrate(p); } catch(e){} }
+function toast(ic, title, sub){
+  const t = h('div',{class:'toast'}, h('div',{class:'ic'}, ic), h('div',null, h('b',null,title), h('span',null,sub||'')));
+  $('#toasts').append(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 400); }, 3200);
+}
+
+/* ---------- particles ---------- */
+const fx = {
+  c:null, x:null, ps:[], on:false,
+  init(){ this.c = $('#fx'); this.x = this.c.getContext && this.c.getContext('2d'); this.size(); addEventListener('resize', () => this.size()); },
+  size(){ if (!this.c) return; const d = devicePixelRatio||1; this.c.width = innerWidth*d; this.c.height = innerHeight*d; if (this.x) this.x.setTransform(d,0,0,d,0,0); },
+  burst(x, y, o={}){
+    if (!this.x || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    const n = o.n||24, cols = o.colors||['#ffcf5a','#27d3b9','#7c5cff'], sp = o.spread||4;
+    for (let i=0;i<n;i++){ const a = Math.random()*Math.PI*2, v = (.4+Math.random())*sp;
+      this.ps.push({x, y, vx:Math.cos(a)*v, vy:Math.sin(a)*v - (o.up||1.5), life:50+Math.random()*30, c:pick(cols), s:2+Math.random()*3.5, g:o.g==null?.12:o.g}); }
+    if (!this.on){ this.on = true; requestAnimationFrame(() => this.tick()); }
+  },
+  tick(){
+    const x = this.x; x.clearRect(0,0,innerWidth,innerHeight);
+    this.ps = this.ps.filter(p => p.life > 0);
+    for (const p of this.ps){ p.x += p.vx; p.y += p.vy; p.vy += p.g; p.life--; x.globalAlpha = clamp(p.life/40,0,1); x.fillStyle = p.c; x.fillRect(p.x, p.y, p.s, p.s); }
+    x.globalAlpha = 1;
+    if (this.ps.length) requestAnimationFrame(() => this.tick()); else { this.on = false; x.clearRect(0,0,innerWidth,innerHeight); }
+  }
+};
+
+/* ---------- Python runner (Pyodide in a Web Worker) ---------- */
+const Py = {
+  state:'idle', worker:null, main:null, waiters:[], pending:{}, seq:0, error:'',
+  onChange(){ updatePyChip(); },
+  init(){
+    if (window.__PYRUN__){ this.main = window.__PYRUN__; this.state = 'ready'; this.onChange(); return; }
+    this.state = 'loading'; this.onChange();
+    let ok = false;
+    try { ok = this.startWorker(); } catch(e){ ok = false; }
+    if (!ok) this.startMain();
+  },
+  startWorker(){
+    if (!window.Worker || !window.Blob || !window.URL) return false;
+    const src = 'importScripts("'+PYO+'pyodide.js");let run_job;'
+      + 'const boot=(async()=>{const py=await loadPyodide({indexURL:"'+PYO+'"});self.__py=py;py.runPython('+JSON.stringify(RUNNER_PY)+');run_job=py.globals.get("run_job");postMessage({t:"ready"});})().catch(e=>postMessage({t:"fail",m:String(e)}));'
+            + 'onmessage=async e=>{await boot;const d=e.data;try{try{await self.__py.loadPackagesFromImports(JSON.parse(d.job).code)}catch(pe){}postMessage({t:"res",id:d.id,out:run_job(d.job)})}catch(err){postMessage({t:"res",id:d.id,err:String(err)})}};';
+    const url = URL.createObjectURL(new Blob([src], {type:'text/javascript'}));
+    const w = new Worker(url); this.worker = w;
+    w.onmessage = ev => {
+      const m = ev.data;
+      if (m.t === 'ready'){ this.state = 'ready'; this.waiters.splice(0).forEach(f => f()); this.onChange(); }
+      else if (m.t === 'fail'){ this.error = m.m; try { w.terminate(); } catch(e){} this.worker = null; this.startMain(); }
+      else if (m.t === 'res'){ const p = this.pending[m.id]; if (p){ delete this.pending[m.id]; clearTimeout(p.timer); m.err ? p.rej(new Error(m.err)) : p.res(JSON.parse(m.out)); } }
+    };
+    w.onerror = () => { if (this.state !== 'ready'){ try { w.terminate(); } catch(e){} this.worker = null; this.startMain(); } };
+    return true;
+  },
+  startMain(){
+    if (this.triedMain){ this.state = 'bad'; this.onChange(); return; }
+    this.triedMain = true; this.state = 'loading'; this.onChange();
+    const fail = e => { this.state = 'bad'; this.error = String((e && e.message) || e || this.error || 'unknown'); this.onChange(); };
+    const s = document.createElement('script'); s.src = PYO + 'pyodide.js';
+    s.onload = async () => { try { const py = await loadPyodide({indexURL:PYO}); py.runPython(RUNNER_PY); const rj = py.globals.get('run_job'); this.main = async job => { try { await py.loadPackagesFromImports(JSON.parse(job).code); } catch(pe){} return JSON.parse(rj(job)); }; this.state = 'ready'; this.waiters.splice(0).forEach(f => f()); this.onChange(); } catch(e){ fail(e); } };
+    s.onerror = () => fail('Could not download the Python engine. Check your connection.');
+    document.head.append(s);
+    setTimeout(() => { if (this.state === 'loading') this.onChange(); }, 20000);
+  },
+  reset(){ try { this.worker && this.worker.terminate(); } catch(e){} this.worker = null; this.main = null; this.triedMain = false; this.error = ''; this.state = 'idle'; this.init(); },
+  whenReady(){ return this.state === 'ready' ? Promise.resolve() : new Promise(r => this.waiters.push(r)); },
+  async run(job){
+    if (this.state === 'bad') throw new Error('The Python engine could not start here, so spells cannot run. Tap the red "Python blocked" tag at the top for fixes. (Details: '+(this.error||'unknown')+')');
+    await this.whenReady();
+    if (this.main) return this.main(JSON.stringify(job));
+    return new Promise((res, rej) => {
+      const id = ++this.seq;
+      const timer = setTimeout(() => { delete this.pending[id]; try { this.worker.terminate(); } catch(e){} this.worker = null; this.state = 'idle'; this.init(); rej(new Error('That took too long, so I reset the spellbook. Try again.')); }, 25000);
+      this.pending[id] = {res, rej, timer};
+      this.worker.postMessage({id, job:JSON.stringify(job)});
+    });
+  }
+};
+function updatePyChip(){
+  const c = $('#pychip'); if (!c) return;
+  c.className = 'py ' + (Py.state === 'ready' ? 'ok' : Py.state === 'bad' ? 'bad' : '');
+  c.querySelector('span').textContent = Py.state === 'ready' ? 'Python ready' : Py.state === 'bad' ? 'Python blocked (tap)' : 'Warming up…';
+  $$('.runbtn').forEach(b => { if (!b.dataset.busy) b.disabled = (Py.state === 'bad'); });
+}
+
+function pyHelp(){
+  modal(close => h('div',null, h('h2',null,'Python is blocked here'),
+    h('p',null,'Spellbook Syntax runs real Python inside your browser using WebAssembly. This viewer (or a content blocker) is not allowing that.'),
+    h('div',{class:'analogy',style:'text-align:left'}, h('b',null,'Try this: '), 'Open the game in Safari or Chrome itself, not inside another app\'s preview. The easiest way is to host the file on GitHub Pages and open that link.'),
+    h('p',{class:'muted',style:'font-size:12px;word-break:break-word'}, 'Details: '+(Py.error||'unknown')),
+    h('div',{class:'nav'}, h('button',{class:'btn ghost',type:'button',onclick:() => { close(); }}, 'Close'), h('button',{class:'btn',type:'button',onclick:() => { close(); Py.reset(); }}, 'Retry'))));
+}
+/* ---------- scene (SVG + Sudo) ---------- */
+const THEMES = { 0:['#150f42','#4b2aa6','#ffcf5a'], 1:['#0d2a3a','#1e7a86','#7ff0d8'], 2:['#0f1d3a','#2f5fb3','#9fd0ff'], 3:['#2a0f0a','#a2431c','#ffd27a'], 4:['#2b1408','#b3611f','#ffd98a'], 5:['#10142e','#3c3f8f','#d7c6ff'], 6:['#2a0d06','#b8451a','#ffb347'], 7:['#0c1630','#2c6f8f','#bff3ff'], 8:['#1a1208','#7a5a2a','#ffe2a0'], 9:['#0f1a1c','#2f6f6a','#ffcf7a'], 10:['#1a0f08','#8a4a1c','#ffd27a'], 11:['#0b1230','#3f4fb8','#8ff0ff'], 12:['#12100a','#6b4f1a','#ffd45a'], 13:['#0a0f1c','#233a6b','#9fe3ff'], 14:['#0b0e1a','#5a3a1f','#ffb86b'] };
+function sudoSVG(){ return `
+<g class="sudo" transform="translate(262,48)">
+ <g class="tail"><path d="M14 86 C-34 84 -40 30 -4 22 C-18 44 -4 70 30 74Z" fill="#b98a5a"/><path d="M-4 22 C-12 30 -14 36 -14 42 C-4 36 0 28 -4 22Z" fill="#3b2a1a"/></g>
+ <ellipse cx="42" cy="78" rx="25" ry="28" fill="#d9a873"/><ellipse cx="42" cy="86" rx="15" ry="18" fill="#f3dfc1"/>
+ <path d="M22 64 Q42 76 64 64 L62 75 Q42 87 24 75Z" fill="#1fb7a6"/><path d="M52 74 l8 18 l-9 -2z" fill="#18978a"/>
+ <circle cx="23" cy="25" r="6.5" fill="#d9a873"/><circle cx="61" cy="25" r="6.5" fill="#d9a873"/>
+ <circle cx="42" cy="44" r="24" fill="#d9a873"/><ellipse cx="42" cy="51" rx="16" ry="11" fill="#f3dfc1"/>
+ <ellipse cx="28" cy="42" rx="7.5" ry="6" fill="#3b2a1a" opacity=".9"/><ellipse cx="56" cy="42" rx="7.5" ry="6" fill="#3b2a1a" opacity=".9"/>
+ <g class="eyes-idle"><circle cx="29" cy="42" r="3.6" fill="#fff"/><circle cx="55" cy="42" r="3.6" fill="#fff"/><circle cx="29.8" cy="42.4" r="1.8" fill="#111"/><circle cx="55.8" cy="42.4" r="1.8" fill="#111"/></g>
+ <g class="eyes-happy" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"><path d="M25 44 Q29 38 33 44"/><path d="M51 44 Q55 38 59 44"/></g>
+ <g class="eyes-shock"><circle cx="29" cy="42" r="5" fill="#fff"/><circle cx="55" cy="42" r="5" fill="#fff"/><circle cx="29" cy="42" r="1.6" fill="#111"/><circle cx="55" cy="42" r="1.6" fill="#111"/></g>
+ <g class="brows" stroke="#3b2a1a" stroke-width="2.2" stroke-linecap="round"><path d="M23 34 L33 37"/><path d="M61 34 L51 37"/></g>
+ <ellipse cx="42" cy="49" rx="3.4" ry="2.5" fill="#2b1d12"/>
+ <path class="m-idle" d="M36 55 Q42 59 48 55" stroke="#2b1d12" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+ <path class="m-happy" d="M35 54 Q42 63 49 54Z" fill="#2b1d12"/>
+ <path class="m-sad" d="M36 58 Q42 53 48 58" stroke="#2b1d12" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+ <ellipse class="m-shock" cx="42" cy="57" rx="3.5" ry="4.5" fill="#2b1d12"/>
+ <path d="M10 49 L24 51 M10 55 L24 54 M74 49 L60 51 M74 55 L60 54" stroke="#fff" stroke-opacity=".6" stroke-width="1"/>
+ <path d="M20 28 L40 -26 L64 28Z" fill="#5b3fd1"/><path d="M40 -26 Q58 -22 60 -14 Q50 -18 44 -10Z" fill="#4a30b8"/>
+ <ellipse cx="42" cy="28" rx="28" ry="6.5" fill="#4a30b8"/><path d="M24 22 Q42 28 60 22 L61 27 Q42 33 23 27Z" fill="#ffcf5a"/>
+ <path d="M38 2 l2 5 5 .5 -4 3.5 1.2 5 -4.2 -2.8 -4.2 2.8 1.2 -5 -4 -3.5 5 -.5z" fill="#ffe27a"/>
+</g>`; }
+function skyline(realm){
+  if (realm === 14){
+    let s = '<rect x="0" y="128" width="360" height="32" fill="#06080f"/>';
+    const doors = [['#5fd7ff',40],['#7dffa6',122],['#ff9fe0',204],['#ffd45a',286]];
+    doors.forEach(([c,x],i) => { s += `<path d="M${x} 128 L${x} 70 Q${x+17} 40 ${x+34} 70 L${x+34} 128Z" fill="#101528" stroke="${c}" stroke-width="2.2"/><circle class="star" cx="${x+17}" cy="84" r="5" fill="${c}" style="animation-delay:${i*.4}s"/>`; });
+    s += '<path d="M60 36 L66 24 L72 36Z M152 30 L158 18 L164 30Z M232 34 L238 22 L244 34Z M312 36 L318 24 L324 36Z" fill="#ffe9a0"/>';
+    for (let i=0;i<6;i++) s += `<circle class="star" cx="${20+i*66}" cy="${14+((i*17)%22)}" r="2.2" fill="#fff0c4" style="animation-delay:${i*.31}s"/>`;
+    return s;
+  }
+  if (realm === 13){
+    let s = '<rect x="0" y="126" width="360" height="34" fill="#070b16"/>';
+    s += '<path d="M40 126 L40 60 Q180 -6 320 60 L320 126Z" fill="#0f1a33" stroke="#9fe3ff" stroke-width="2"/>';
+    for (let i=0;i<7;i++) s += `<rect x="${58+i*38}" y="${70+((i*13)%14)}" width="26" height="${54-((i*13)%14)}" rx="2" fill="#16254a" stroke="#4e7fd1" stroke-width="1.2"/>`;
+    s += '<path d="M160 112 L160 84 L172 84 L172 74 L188 74 L188 84 L200 84 L200 112Z" fill="#ffd45a"/><circle cx="180" cy="64" r="8" fill="#ffe9a0"/>';
+    for (let i=0;i<6;i++) s += `<circle class="star" cx="${24+i*64}" cy="${30+((i*19)%30)}" r="2.6" fill="#bff3ff" style="animation-delay:${i*.37}s"/>`;
+    return s;
+  }
+  if (realm === 10){
+    let s = '<rect x="0" y="126" width="360" height="34" fill="#100803"/>';
+    s += '<rect x="30" y="52" width="300" height="76" fill="#2a1608" stroke="#5a3a1c" stroke-width="2"/><path d="M20 52 L180 22 L340 52Z" fill="#3a2010"/>';
+    const banners = ['#8b2fc9','#c92f6d','#c9a52f','#2fc9a8','#3f6bd9'];
+    for (let i=0;i<5;i++){ const x = 52+i*52; s += `<path d="M${x} 62 L${x+26} 62 L${x+26} 104 L${x+13} 96 L${x} 104Z" fill="${banners[i]}" opacity=".9"/>`; }
+    for (let i=0;i<3;i++) s += `<circle class="star" cx="${78+i*102}" cy="${116}" r="4" fill="#ffd27a" style="animation-delay:${i*.35}s"/>`;
+    return s;
+  }
+  if (realm === 12){
+    let s = '<rect x="0" y="126" width="360" height="34" fill="#0a0804"/>';
+    s += '<path d="M96 126 L96 62 Q180 6 264 62 L264 126 L236 126 L236 70 Q180 34 124 70 L124 126Z" fill="#3a2a0c" stroke="#ffd45a" stroke-width="2.5"/>';
+    s += '<circle cx="180" cy="84" r="11" fill="#ffd45a"/><path d="M175 90 L172 112 L188 112 L185 90Z" fill="#ffd45a"/><circle cx="180" cy="84" r="4" fill="#12100a"/>';
+    s += '<rect x="0" y="116" width="96" height="6" fill="#6b4f1a"/><rect x="264" y="116" width="96" height="6" fill="#6b4f1a"/>';
+    for (let i=0;i<5;i++) s += `<rect class="star" x="${10+i*18}" y="108" width="10" height="8" rx="2" fill="#ffd45a" opacity=".75" style="animation-delay:${i*.25}s"/><rect class="star" x="${272+i*18}" y="108" width="10" height="8" rx="2" fill="#ffd45a" opacity=".75" style="animation-delay:${i*.25+.12}s"/>`;
+    for (let i=0;i<5;i++) s += `<circle class="star" cx="${30+i*76}" cy="${34+((i*17)%26)}" r="3" fill="#ffe9a0" style="animation-delay:${i*.4}s"/>`;
+    return s;
+  }
+  if (realm === 11){
+    let s = '<rect x="0" y="126" width="360" height="34" fill="#060a1c"/>';
+    s += '<path d="M120 126 L120 70 Q180 24 240 70 L240 126 L218 126 L218 76 Q180 46 142 76 L142 126Z" fill="#1c2a6a" stroke="#8ff0ff" stroke-width="2"/>';
+    s += '<rect x="0" y="118" width="360" height="8" fill="#10183a"/>';
+    for (let i=0;i<9;i++) s += `<rect class="star" x="${8+i*40}" y="119" width="14" height="6" rx="2" fill="#8ff0ff" opacity=".7" style="animation-delay:${i*.2}s"/>`;
+    for (let i=0;i<4;i++) s += `<circle class="star" cx="${34+i*98}" cy="${46+((i*13)%20)}" r="3" fill="#8ff0ff" style="animation-delay:${i*.4}s"/>`;
+    return s;
+  }
+  if (realm === 8){
+    let s = '<rect x="0" y="126" width="360" height="34" fill="#0d0904"/>';
+    const cols = ['#5a3d1a','#7a5426','#4a3216','#8a6030'];
+    for (let i=0;i<8;i++){ const x = 6+i*44, hh = 64+((i*19)%34);
+      s += `<rect x="${x}" y="${126-hh}" width="36" height="${hh}" fill="${cols[i%4]}" stroke="#2a1c0c" stroke-width="2"/>`;
+      for (let k=0;k<4;k++) s += `<rect x="${x+4}" y="${132-hh+k*((hh-12)/4)}" width="28" height="3" fill="#ffe2a0" opacity=".25"/>`;
+    }
+    for (let i=0;i<5;i++) s += `<circle class="star" cx="${30+i*76}" cy="${44+((i*17)%26)}" r="3" fill="#ffe2a0" style="animation-delay:${i*.35}s"/>`;
+    return s;
+  }
+  if (realm === 9){
+    let s = '<rect x="0" y="126" width="360" height="34" fill="#081012"/>';
+    const gear = (cx,cy,r,c,d) => { let t = `<g class="star" style="animation-delay:${d}s"><circle cx="${cx}" cy="${cy}" r="${r}" fill="${c}"/>`; for (let k=0;k<8;k++){ const a = k*Math.PI/4; t += `<rect x="${(cx+Math.cos(a)*r-4).toFixed(1)}" y="${(cy+Math.sin(a)*r-4).toFixed(1)}" width="8" height="8" fill="${c}"/>`; } return t + `<circle cx="${cx}" cy="${cy}" r="${(r/2.6).toFixed(1)}" fill="#081012"/></g>`; };
+    s += gear(60,96,26,'#2f6f6a',0) + gear(128,110,16,'#b8862f',.3) + gear(212,92,30,'#3b8a82',.15) + gear(296,108,20,'#b8862f',.45);
+    s += '<rect x="0" y="124" width="360" height="6" fill="#143034"/>';
+    return s;
+  }
+  if (realm === 6){
+    let s = '<rect x="0" y="124" width="360" height="36" fill="#1a0803"/>';
+    s += '<path d="M120 124 L132 96 L228 96 L240 124Z" fill="#3a1608"/><rect x="150" y="84" width="60" height="14" rx="3" fill="#5a2a12"/><rect x="172" y="70" width="16" height="16" fill="#5a2a12"/>';
+    s += '<path d="M40 124 L40 84 L72 84 L72 124Z" fill="#2c1006"/><rect x="36" y="76" width="40" height="10" fill="#4a1e0c"/>';
+    s += '<path d="M290 124 L290 90 L322 90 L322 124Z" fill="#2c1006"/><rect x="286" y="82" width="40" height="10" fill="#4a1e0c"/>';
+    for (let i=0;i<7;i++){ const x = 20+i*48; s += `<circle class="star" cx="${x}" cy="${112-((i*19)%22)}" r="3" fill="${i%2?'#ffb347':'#ff7a3a'}" style="animation-delay:${i*.28}s"/>`; }
+    return s;
+  }
+  if (realm === 7){
+    let s = '<rect x="0" y="126" width="360" height="34" fill="#070d1f"/>';
+    for (let i=0;i<5;i++){ const x = 14+i*68; s += `<rect x="${x}" y="52" width="46" height="74" rx="23" fill="#10244a" stroke="#6fb8d8" stroke-width="2"/><rect x="${x+8}" y="62" width="30" height="56" rx="15" fill="#1c3f70" opacity=".8"/><path d="M${x+14} 76 L${x+24} 66 L${x+30} 72" stroke="#bff3ff" stroke-width="2" fill="none" opacity=".6"/>`; }
+    for (let i=0;i<4;i++) s += `<circle class="star" cx="${48+i*88}" cy="${40+((i*13)%16)}" r="3" fill="#bff3ff" style="animation-delay:${i*.4}s"/>`;
+    return s;
+  }
+  if (realm === 4){
+    let s = '<rect x="0" y="122" width="360" height="38" fill="#1c0e05"/>';
+    const cols = ['#c9552f','#e0a526','#2f9fc9','#7bc92f','#c92f8b'];
+    for (let i=0;i<5;i++){ const x = 6+i*70, c = cols[i];
+      s += `<rect x="${x+8}" y="100" width="46" height="24" fill="#2a1608"/><path d="M${x} 100 L${x+62} 100 L${x+54} 82 L${x+8} 82Z" fill="${c}" opacity=".92"/><path d="M${x} 100 q8 9 15 0 q8 9 16 0 q8 9 15 0 q8 9 16 0Z" fill="${c}"/>`
+        + `<circle class="star" cx="${x+31}" cy="113" r="4.2" fill="#ffd27a" style="animation-delay:${i*.3}s"/><rect x="${x+29}" y="86" width="4" height="8" fill="#2a1608" opacity=".5"/>`; }
+    return s;
+  }
+  if (realm === 5){
+    let s = '<rect x="0" y="126" width="360" height="34" fill="#0a0c22"/>';
+    const cols = ['#2a2f6e','#4a3a8c','#6b4a9c','#3a4fa0'];
+    for (let i=0;i<9;i++){ const x = 6+i*39, hh = 58+((i*17)%30);
+      s += `<rect x="${x}" y="${126-hh}" width="32" height="${hh}" rx="2" fill="${cols[i%4]}"/>`
+        + `<rect x="${x+4}" y="${132-hh}" width="5" height="${hh-12}" fill="#d7c6ff" opacity=".35"/><rect x="${x+12}" y="${132-hh}" width="5" height="${hh-12}" fill="#ffd98a" opacity=".3"/><rect x="${x+20}" y="${132-hh}" width="5" height="${hh-12}" fill="#9fb4ff" opacity=".35"/>`; }
+    for (let i=0;i<4;i++) s += `<circle class="star" cx="${40+i*88}" cy="${70-((i*23)%24)}" r="3" fill="#ffe9a8" style="animation-delay:${i*.45}s"/>`;
+    return s;
+  }
+  if (realm === 2){
+    let s = '<rect x="0" y="126" width="360" height="34" fill="#08122a"/>';
+    s += '<path d="M150 160 L170 116 L190 116 L210 160Z" fill="#14264f"/><path d="M170 116 L58 92 L64 86 L178 106Z" fill="#14264f"/><path d="M190 116 L302 92 L296 86 L182 106Z" fill="#14264f"/>';
+    s += '<rect x="176" y="70" width="8" height="48" fill="#3a2a18"/><path d="M184 74 L222 80 L184 88Z" fill="#c9a52f"/><path d="M176 94 L142 100 L176 108Z" fill="#8b2fc9"/>';
+    for (let i=0;i<6;i++){ const x = 14+i*58; s += `<circle class="star" cx="${x}" cy="${120-((i*17)%14)}" r="3.2" fill="#9fd0ff" style="animation-delay:${i*.35}s"/><rect x="${x-1.5}" y="${122-((i*17)%14)}" width="3" height="12" fill="#26406e"/>`; }
+    return s;
+  }
+  if (realm === 3){
+    let s = '<rect x="0" y="120" width="360" height="40" fill="#1a0a06"/>';
+    for (let i=0;i<6;i++){ const w = 330-i*52, hh = 104-i*16, x = 180-w/2, y = 128-hh; s += `<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${22-i*2}" fill="none" stroke="${['#5a2a12','#6e3316','#823c1a','#97471f','#ac5224','#c15e29'][i]}" stroke-width="${4-i*.4}"/>`; }
+    for (let i=0;i<4;i++){ const y = 118-i*14, dx = 150-i*28; s += `<circle class="star" cx="${180-dx}" cy="${y}" r="${4-i*.6}" fill="#ffb347" style="animation-delay:${i*.3}s"/><circle class="star" cx="${180+dx}" cy="${y}" r="${4-i*.6}" fill="#ffd27a" style="animation-delay:${i*.3+.15}s"/>`; }
+    return s;
+  }
+  if (realm === 1){
+    let s = '<rect x="0" y="118" width="360" height="40" fill="#07161f"/>';
+    for (let i=0;i<7;i++){ const x = 8+i*50; s += `<rect x="${x}" y="${96-((i*13)%22)}" width="38" height="${64+((i*13)%22)}" rx="3" fill="#0a2230"/>`
+      + `<rect x="${x+8}" y="${108-((i*13)%22)}" width="8" height="12" rx="3" fill="#7ff0d8" opacity=".55"/><rect x="${x+22}" y="${108-((i*13)%22)}" width="8" height="12" rx="3" fill="#ffcf5a" opacity=".5"/>`; }
+    return s;
+  }
+  let s = '<path d="M0 126 L40 100 L70 120 L110 92 L150 122 L200 104 L240 126 L280 98 L320 120 L360 106 L360 160 L0 160Z" fill="#0b0626"/>';
+  for (let i=0;i<5;i++){ const x = 6+i*66; s += `<path d="M${x} 122 L${x+30} 106 L${x+60} 122Z" fill="${['#8b2fc9','#c92f6d','#2fc9a8','#c9a52f','#3f6bd9'][i]}" opacity=".85"/><rect x="${x+4}" y="122" width="52" height="30" fill="#140b36"/><circle cx="${x+30}" cy="136" r="5" fill="#ffcf5a" opacity=".7"/>`; }
+  return s;
+}
+function makeScene(realm=0){
+  const th = THEMES[realm] || THEMES[0];
+  const stars = Array.from({length:26}, (_,i) => `<circle class="star" cx="${(i*47)%350+5}" cy="${(i*29)%80+4}" r="${(i%3)+.7}" fill="#fff" style="animation-delay:${(i%7)*.4}s"/>`).join('');
+  const runes = ['{ }','( )','=','#','"…"',':','+'].map((t,i) => `<text class="rune" x="${20+i*48}" y="140" font-size="${13+(i%3)*3}" style="animation-delay:${i*1.3}s">${t}</text>`).join('');
+  const el = h('div',{class:'scene','data-mood':'idle', style:`--sky1:${th[0]};--sky2:${th[1]}`});
+  el.innerHTML = `<svg viewBox="0 0 360 160" role="img" aria-label="Sudo the ferret wizard">${stars}<circle cx="318" cy="26" r="13" fill="#fff6c8" opacity=".9"/>${skyline(realm)}${runes}${sudoSVG()}</svg><div class="bubble"><span class="who">SUDO</span><span class="say"></span></div>`;
+  let pokes = 0;
+  $('.sudo', el).addEventListener('click', () => { sfx.tap(); say(pick(['Hey! Hat. Hands off the hat.','I bill by the poke.','Yes? Do you have a question, or are you just poking me?','Careful, I have root access to your feelings.','That tickles. Stop. No, keep going.']), 'happy'); S.stats.tapSudo++; save(); pokes++; if (S.stats.tapSudo >= 7) award('tap_sudo'); });
+  function say(text, mood){ $('.say', el).innerHTML = inlineMd(text).replace(/^<p>|<\/p>$/g,'').replace(/<\/p><p>/g,'<br>'); if (mood){ el.dataset.mood = mood; clearTimeout(el._t); el._t = setTimeout(() => { el.dataset.mood = 'idle'; }, 2600); } }
+  el.say = say; return el;
+}
+const LINES = {
+  ok:['Clean cast. Annoyingly good.','That is exactly what I would have written. Slightly slower.','Perfect. The book is purring.','Nailed it. Do that again, but faster.','Correct. I am almost proud.'],
+  bad:['Not quite. The book remains unimpressed.','Close. Read the red text, it is trying to help.','Hmm. Check capitals, quotes, and order.','The spell fizzled. Look at the checklist.','That is a bug. Bugs are just spells with opinions.'],
+  err:['Red text! Good. Read it from the bottom up.','Errors are directions, not insults.','The book is talking to you. Listen to the last line.'],
+  hint:['Fine, a hint. Hints cost a little Mastery, but not your dignity.','Hint delivered. Use it wisely.'],
+};
+
+/* ---------- state ---------- */
+const ui = { view:'welcome', lesson:null, lv:null, echo:null, scene:null };
+const lessonIndex = id => LESSONS.findIndex(l => l.id === id);
+const isDone = id => !!S.done[id];
+const isUnlocked = i => i === 0 || isDone(LESSONS[i-1].id);
+function currentLessonIdx(){ const i = LESSONS.findIndex(l => !isDone(l.id)); return i < 0 ? LESSONS.length : i; }
+
+/* ---------- HUD & dock ---------- */
+function renderHUD(){
+  const lv = levelFor(S.mp), a = lvStart(lv), b = lvStart(lv+1);
+  const pct = lv >= 54 ? 100 : clamp((S.mp - a)/(b - a)*100, 0, 100);
+  const hud = $('#hud'); hud.innerHTML = '';
+  hud.append(
+    h('div',{class:'lvl'}, String(lv)),
+    h('div',{class:'hudmid'},
+      h('div',{class:'hudtop'}, h('span',{class:'hudname'}, (S.name||'Apprentice')+' · '+LEVELS[lv-1][0]), h('span',{class:'hudmp'}, S.mp+' MP')),
+      h('div',{class:'bar'}, h('i',{style:'width:'+pct+'%'}))),
+    h('div',{class:'py',id:'pychip',style:'cursor:pointer',onclick:() => { if (Py.state === 'bad') pyHelp(); }}, h('i'), h('span',null,'')),
+    h('button',{class:'hudbtn','aria-label':'Sound',onclick:() => { S.settings.sound = !S.settings.sound; save(); renderHUD(); sfx.tap(); }}, S.settings.sound ? '🔊' : '🔇'));
+  updatePyChip();
+}
+const DOCK = [['map','🗺️','Quest'],['echo','🔔','Echoes'],['codex','📖','Codex'],['trophies','🏆','Trophies'],['more','⚙️','More']];
+function renderDock(){
+  const d = $('#dock'); d.innerHTML = '';
+  if (ui.view === 'welcome'){ d.style.display = 'none'; return; }
+  d.style.display = 'flex';
+  DOCK.forEach(([v,ic,l]) => d.append(h('button',{class:ui.view===v || (v==='more'&&['sandbox','settings','portfolio'].includes(ui.view)) || (v==='map'&&ui.view==='lesson') ? 'on' : '', onclick:() => { sfx.tap(); go(v); }}, h('span',null,ic), l)));
+}
+function go(v){ ui.view = v; render(); scrollTo(0,0); }
+
+/* ---------- modal ---------- */
+function modal(content){
+  return new Promise(res => {
+    const o = $('#overlay'); o.innerHTML = ''; o.classList.add('on');
+    const close = () => { o.classList.remove('on'); o.innerHTML = ''; res(); };
+    o.append(h('div',{class:'modal'}, content(close)));
+  });
+}
+
+/* ---------- editor component ---------- */
+function makeEditor(initial, opts={}){
+  const gut = h('pre',{class:'ed-gutter'}), hlEl = h('pre',{class:'ed-hl','aria-hidden':'true'});
+  const ta = h('textarea',{class:'ed-ta',spellcheck:'false',autocapitalize:'off',autocorrect:'off',autocomplete:'off',wrap:'off','aria-label':'Code editor'});
+  const sizer = h('div',{class:'ed-sizer'});
+  const code = h('div',{class:'ed-code'}, sizer, hlEl, ta);
+  const runes = h('div',{class:'runes'});
+  const root = h('div',{class:'ed'}, h('div',{class:'ed-main'}, gut, code), runes);
+  function sync(){
+    const v = ta.value; const n = v.split('\n').length;
+    hlEl.innerHTML = hl(v) + '\n'; gut.textContent = Array.from({length:Math.max(n,2)}, (_,i) => i+1).join('\n');
+    sizer.textContent = v + '\n';
+    hlEl.scrollLeft = ta.scrollLeft; root.dispatchEvent(new Event('codechange'));
+  }
+  ta.addEventListener('input', sync);
+  ta.addEventListener('scroll', () => { hlEl.scrollLeft = ta.scrollLeft; });
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Tab'){ e.preventDefault(); insert('    '); }
+    else if (e.key === 'Enter'){
+      const s = ta.selectionStart, before = ta.value.slice(0, s); const line = before.split('\n').pop();
+      let ind = line.match(/^ */)[0]; if (/:\s*$/.test(line)) ind += '    ';
+      if (ind){ e.preventDefault(); insert('\n'+ind); }
+    }
+  });
+  function insert(txt, back=0){
+    const s = ta.selectionStart, e = ta.selectionEnd; ta.value = ta.value.slice(0,s) + txt + ta.value.slice(e);
+    const p = s + txt.length - back; ta.selectionStart = ta.selectionEnd = p; sync(); ta.focus();
+  }
+  [['" "','""',1],["' '","''",1],['( )','()',1],[':',':',0],['=','=',0],['#','#',0],['{ }','{}',1],['[ ]','[]',1],['Tab','    ',0],['↵','\n',0]].forEach(([lab,txt,back]) =>
+    runes.append(h('button',{class:'rune-btn',type:'button',onmousedown:e => e.preventDefault(),ontouchstart:e => e.preventDefault(),onclick:() => { sfx.tap(); insert(txt, back); }}, lab)));
+  root.getValue = () => ta.value;
+  root.setValue = v => { ta.value = v; sync(); };
+  root.ta = ta; root.setValue(initial || '');
+  return root;
+}
+
+/* ---------- code box (editor + inputs + run + output) ---------- */
+function codeBox({code, inputs=[], runLabel='⚡ Cast', showRunes=true, files=null}){
+  const ed = makeEditor(code);
+  const inTa = h('textarea',{'aria-label':'Inputs, one answer per line',spellcheck:'false',autocapitalize:'off',autocorrect:'off'}); inTa.value = inputs.join('\n');
+  const inBox = h('div',{class:'inputs'}, h('label',null,'📥 Inputs — one answer per line (each input() uses the next line)'), inTa);
+  const outEl = h('div'); const btn = h('button',{class:'btn teal runbtn',type:'button'}, runLabel);
+  const fkeys = files ? Object.keys(files) : [];
+  const filesEl = fkeys.length ? h('details',{class:'files',open:'open'}, h('summary',null,'📁 Files in your folder ('+fkeys.length+')'), fkeys.map(k => h('div',{class:'file'}, h('b',null,k), h('pre',null,files[k] === '' ? '(empty)' : files[k])))) : null;
+  const wrap = h('div',null, ed, filesEl, inBox, h('div',{class:'row'}, btn), outEl);
+  const need = () => /\binput\s*\(/.test(ed.getValue()) || inputs.length > 0;
+  const sync = () => { inBox.style.display = need() ? 'block' : 'none'; };
+  ed.addEventListener('codechange', sync); sync();
+  const getInputs = () => inTa.value === '' ? [] : inTa.value.split('\n');
+  function showOutput(d){
+    outEl.innerHTML = '';
+    const out = d.out || ''; const e = d.err;
+    const box = h('div',{class:'out'}, h('div',{class:'oh'}, h('span',null,'Cast result'), h('span',null, e ? '✖ error' : '✔ ran')));
+    if (out || !e) box.append(h('pre',null, out || '(no output)'));
+    if (e){ box.append(h('pre',{class:'err'}, e.text)); const help = ERR_HELP[e.type]; box.append(h('div',{class:'help',html:'<b>Sudo translates:</b> '+(help || esc(e.msg||''))})); }
+    outEl.append(box);
+  }
+  return {el:wrap, ed, btn, files, getInputs, showOutput, clearOutput:() => { outEl.innerHTML = ''; }};
+}
+async function execJob(box, cases){
+  box.btn.dataset.busy = '1'; const old = box.btn.textContent; box.btn.disabled = true; box.btn.textContent = Py.state === 'ready' ? '✨ Casting…' : '⏳ Spellbook warming up…';
+  try { const r = await Py.run({code:box.ed.getValue(), inputs:box.getInputs(), cases:cases||[], files:box.files||undefined}); box.showOutput(r.display); return r; }
+  catch(err){ box.showOutput({out:'', err:{type:'Error', msg:String(err.message||err), text:String(err.message||err)}}); return null; }
+  finally { delete box.btn.dataset.busy; box.btn.disabled = Py.state === 'bad'; box.btn.textContent = old; }
+}
+function aggregate(r){
+  const names = [], map = {};
+  r.cases.forEach(c => c.results.forEach(t => { if (!(t.name in map)){ map[t.name] = true; names.push(t.name); } if (!t.ok) map[t.name] = false; }));
+  const crashed = r.cases.find(c => c.err);
+  if (crashed) names.forEach(n => map[n] = false);
+  return {names, map, crashed, all: names.length > 0 && names.every(n => map[n]) && !crashed};
+}
+function checklistEl(agg, show){
+  return h('ul',{class:'checklist'}, agg.names.map(n => h('li',{class:show ? (agg.map[n] ? 'ok' : 'no') : ''}, h('span',null, show ? (agg.map[n] ? '✔' : '✖') : '○'), h('span',null,n))));
+}
+
+/* ---------- task component (bug / write / boss-write) ---------- */
+function taskStep(spec, rec, ctx){
+  // spec: {prompt|task, starter|broken, cases, sol, hints, inputs}
+  const root = h('div');
+  const starter = spec.starter != null ? spec.starter : spec.broken;
+  const box = codeBox({code:starter, inputs:spec.inputs||[], runLabel:'⚡ Cast & check', files:spec.files});
+  const listEl = h('div'); const hintEl = h('div'); const noteEl = h('div');
+  const tests0 = []; const seen = new Set();
+  spec.cases.forEach(c => c.tests.forEach(t => { if (!seen.has(t[0])){ seen.add(t[0]); tests0.push(t[0]); } }));
+  listEl.append(checklistEl({names:tests0,map:{}}, false));
+  const state = {fails:0, hints:0, solSeen:false, done:false};
+  rec.state = state;
+  const hintBtn = h('button',{class:'btn ghost small',type:'button'}, '💡 Hint');
+  const hints = spec.hints || [];
+  const maxHints = Math.min(3, hints.length) + (spec.sol ? 1 : 0);
+  function updHintBtn(){ hintBtn.textContent = state.hints >= maxHints ? '💡 No more hints' : '💡 Hint ('+state.hints+'/'+maxHints+')' ; hintBtn.disabled = state.hints >= maxHints || state.done; }
+  hintBtn.onclick = () => {
+    const nextIdx = state.hints;
+    if (nextIdx >= maxHints) return;
+    const isSol = nextIdx === maxHints - 1;
+    if (isSol && !hintBtn.dataset.armed){ hintBtn.dataset.armed = '1'; hintBtn.textContent = '⚠️ Tap again: show the answer (0 MP)'; setTimeout(() => { delete hintBtn.dataset.armed; updHintBtn(); }, 3500); return; }
+    state.hints++; rec.hints++; sfx.tap();
+    if (isSol){ state.solSeen = true; hintEl.append(h('div',{class:'hintbox'}, h('b',null,'The full answer:'), h('div',{class:'pre'}, spec.sol), h('button',{class:'btn ghost small',type:'button',onclick:() => { box.ed.setValue(spec.sol); }}, 'Paste into editor'))); }
+    else hintEl.append(h('div',{class:'hintbox'}, h('b',null,'Hint '+state.hints+': '), hints[nextIdx]));
+    ctx.say(pick(LINES.hint), 'idle'); updHintBtn();
+  };
+  updHintBtn();
+  box.btn.onclick = async () => {
+    if (state.done) return; sfx.tap();
+    const r = await execJob(box, spec.cases); if (!r) return;
+    if (r.display.err){ sfx.bad(); ctx.seenError(r.display.err.type); ctx.say(pick(LINES.err), 'shock'); }
+    const agg = aggregate(r);
+    listEl.innerHTML = ''; listEl.append(checklistEl(agg, true));
+    if (agg.all){
+      state.done = true; box.ed.ta.readOnly = true; box.btn.disabled = true; updHintBtn();
+      sfx.ok(); vib(18); const b = box.btn.getBoundingClientRect(); fx.burst(b.left + b.width/2, b.top, {n:30});
+      ctx.say(pick(LINES.ok), 'happy'); noteEl.innerHTML = ''; noteEl.append(h('div',{class:'note good'}, '✅ All checks passed.'));
+      state.code = box.ed.getValue(); ctx.onPass(state);
+    } else {
+      state.fails++; if (!r.display.err){ sfx.bad(); ctx.say(pick(LINES.bad), 'sad'); }
+      noteEl.innerHTML = ''; noteEl.append(h('div',{class:'note bad'}, r.display.err ? 'The spell crashed before the checks could run. Read the red text.' : 'Not yet. Look at the ✖ items and try again.'));
+    }
+  };
+  root.append(box.el, listEl, noteEl, h('div',{class:'row'}, hintBtn), hintEl);
+  return root;
+}
+const taskMP = (base, st) => st.solSeen ? 0 : Math.max(1, base - st.hints);
+
+/* ---------- predict / mcq component ---------- */
+function mcqStep(q, rec, ctx, opts={}){
+  // opts.retry: allow retry until right (default true). Returns element. Calls ctx.onMcq({first, tries, correct})
+  const root = h('div'); const retry = opts.retry !== false;
+  if (q.code) root.append(h('pre',{class:'codeblk',html:hl(q.code)}));
+  root.append(h('p',{class:'steptitle',html:inlineMd(q.q).replace(/^<p>|<\/p>$/g,'')}));
+  const order = opts.shuffle ? shuffle(q.opts.map((o,i) => i)) : q.opts.map((o,i) => i);
+  const optsEl = h('div',{class:'opts'}); const fb = h('div'); const runEl = h('div');
+  let tries = 0, over = false;
+  order.forEach(idx => {
+    const b = h('button',{class:'opt',type:'button'}, q.opts[idx]);
+    b.onclick = () => {
+      if (over) return; tries++; sfx.tap();
+      if (idx === q.ans){
+        over = true; b.classList.add('good'); $$('.opt',optsEl).forEach(x => x.disabled = true); sfx.ok(); vib(15);
+        const r = b.getBoundingClientRect(); fx.burst(r.left + r.width/2, r.top + r.height/2, {n:22});
+        ctx.say(pick(LINES.ok), 'happy');
+        fb.innerHTML = ''; fb.append(h('div',{class:'note good',html:'✅ <b>Yes.</b> '+inlineMd(q.why||'').replace(/^<p>|<\/p>$/g,'')}));
+        if (q.code && !opts.noRun) runEl.append(runPeek(q));
+        ctx.onMcq({first:tries === 1, tries, correct:true});
+      } else {
+        b.classList.add('bad'); b.disabled = true; sfx.bad(); ctx.say(pick(LINES.bad), 'sad');
+        if (!retry){ over = true; $$('.opt',optsEl).forEach(x => x.disabled = true); const good = $$('.opt',optsEl).find(x => x.textContent === q.opts[q.ans]); if (good) good.classList.add('good');
+          fb.innerHTML = ''; fb.append(h('div',{class:'note bad',html:'❌ The answer was <b>'+esc(q.opts[q.ans])+'</b>. '+inlineMd(q.why||'').replace(/^<p>|<\/p>$/g,'')})); ctx.onMcq({first:false, tries, correct:false}); }
+        else { fb.innerHTML = ''; fb.append(h('div',{class:'note bad'}, 'Not quite. Read the code again and pick another.')); }
+      }
+    };
+    optsEl.append(b);
+  });
+  root.append(optsEl, fb, runEl);
+  return root;
+}
+function runPeek(q){
+  const wrap = h('div'); const outEl = h('div');
+  const b = h('button',{class:'btn ghost small runbtn',type:'button',onclick: async () => {
+    b.disabled = true; b.textContent = '⏳ Running…';
+    try { const r = await Py.run({code:q.code, inputs:q.inputs||[], cases:[], files:q.files}); outEl.innerHTML = ''; const d = r.display;
+      const box = h('div',{class:'out'}, h('div',{class:'oh'}, h('span',null,'What Python really did')));
+      if (d.out) box.append(h('pre',null,d.out)); if (d.err) box.append(h('pre',{class:'err'}, d.err.text)); outEl.append(box);
+    } catch(e){ outEl.textContent = String(e.message||e); }
+    b.textContent = '▶ Run it for real'; b.disabled = false; }}, '▶ Run it for real');
+  wrap.append(b, outEl); return wrap;
+}
+
+/* ---------- lesson flow ---------- */
+function stepsFor(L){
+  if (L.kind === 'boss') return [{t:'story'}, ...L.phases.map((p,i) => ({t:'phase', i})), {t:'power'}];
+  if (L.kind === 'gap') return [{t:'story'}, ...L.phases.map((p,i) => ({t:'phase', i})), {t:'result'}, {t:'power'}];
+  const s = [{t:'story'},{t:'concept'},{t:'predict'},{t:'cast'}];
+  if (L.bug) s.push({t:'bug'}); s.push({t:'write'},{t:'power'}); return s;
+}
+const STEP_NAMES = {story:'Story', concept:'Learn', predict:'Predict', cast:'Cast', bug:'Bug Hunt', write:'Write', power:'Power-Up', phase:'Trial', result:'Result'};
+
+function openLesson(id, practice=false){
+  const L = LESSONS.find(l => l.id === id); if (!L) return;
+  const rec = {retake:!!ui.nextIsRetake, mp:0, hints:0, fails:0, errs:new Set(), predictFirst:0, bugs:0, practice: practice || isDone(L.id), gap:{points:0, max:0, weak:[]}, boss:{hp:0}, stepMP:{}, phoenix:false, sluggerOK:false};
+  ui.nextIsRetake = false; ui.lesson = L; ui.rec = rec; ui.steps = stepsFor(L); ui.si = 0; ui.phaseFirstTries = 0;
+  const realm = L.realm; const scene = makeScene(realm); ui.scene = scene;
+  ui.lv = {root:h('div',{class:'view'}), scene, pips:h('div',{class:'pips'}), body:h('div')};
+  ui.lv.root.append(h('div',{class:'row',style:'justify-content:space-between'}, h('button',{class:'btn ghost small',onclick:() => { sfx.tap(); go('map'); }}, '✕ Map'), h('span',{class:'tag'}, 'Realm '+L.realm+' · Lesson '+L.n+(rec.practice ? ' · practice' : ''))), h('div',{style:'height:10px'}), scene, ui.lv.pips, ui.lv.body);
+  ui.view = 'lesson'; render(); showStep(0);
+}
+const ctxFor = rec => ({
+  say:(t,m) => ui.scene.say(t, m),
+  seenError:t => { rec.errs.add(t); },
+});
+function pipsRender(){
+  const p = ui.lv.pips; p.innerHTML = '';
+  ui.steps.forEach((s,i) => p.append(h('div',{class:'pip '+(i<ui.si?'on':i===ui.si?'cur':'')})));
+}
+function stepCard(title, tagText){ return h('div',{class:'card'}, h('div',{class:'steptitle'}, h('h2',null,title), tagText ? h('span',{class:'tag'},tagText) : null)); }
+function navBtn(label, onclick, disabled=false){ const b = h('button',{class:'btn block',type:'button',onclick:() => { sfx.tap(); onclick(); }}, label); b.disabled = disabled; return b; }
+function next(){ if (ui.si < ui.steps.length-1) showStep(ui.si+1); }
+
+function showStep(i){
+  ui.si = i; pipsRender(); const L = ui.lesson, rec = ui.rec, s = ui.steps[i], body = ui.lv.body, ctx = ctxFor(rec);
+  body.innerHTML = ''; scrollTo({top:0});
+  const T = s.t;
+  if (T === 'story'){
+    const c = stepCard(L.kind==='boss' ? '⚔️ '+L.title : L.kind==='gap' ? '🗝️ '+L.title : L.title, 'Story');
+    c.append(h('div',{html:md(L.story)}));
+    if (L.kind==='boss') c.append(h('div',{class:'boss-hud'}, h('div',{class:'nm'}, h('span',null,L.boss.name), h('span',null,'HP '+L.boss.hp)), h('div',{class:'bar'}, h('i',{style:'width:100%'}))));
+    if (L.kind==='gap') c.append(h('div',{class:'note'}, 'Score '+(L.passPct||80)+'% or more to pass. Miss it and you get a Training Grounds list, then you can retake.'));
+    c.append(h('div',{class:'nav'}, navBtn('Begin →', next)));
+    body.append(c); ui.scene.say(L.story.split(/[.!?]\s/)[0].replace(/\*\*/g,'')+'…', 'idle');
+    if (L.kind === 'boss'){ rec.boss.hp = L.boss.hp; }
+  }
+  else if (T === 'concept'){
+    const c = stepCard('Learn it', 'Concept'); c.append(h('div',{html:md(L.concept.html)}));
+    if (L.concept.analogy) c.append(h('div',{class:'analogy',html:inlineMd(L.concept.analogy).replace(/^<p>|<\/p>$/g,'')}));
+    if (L.concept.example) c.append(h('pre',{class:'codeblk',html:hl(L.concept.example)}));
+    c.append(h('div',{class:'nav'}, navBtn('Got it →', next))); body.append(c); ui.scene.say('Read this once. Then we break things on purpose.', 'idle');
+  }
+  else if (T === 'predict'){
+    const c = stepCard('Predict', 'Read the code'); const nb = navBtn('Continue →', next, true);
+    const q = L.predict;
+    const m = mcqStep(q, rec, {...ctx, onMcq:r => { rec.stepMP.predict = r.correct ? (r.first ? 2 : (r.tries===2 ? 1 : 0)) : 0; if (r.first) { rec.predictFirst++; } nb.disabled = false; }}, {shuffle:true});
+    c.append(m, h('div',{class:'nav'}, nb)); body.append(c); ui.scene.say('Do not run it yet. What do YOU think it does?', 'idle');
+  }
+  else if (T === 'cast'){
+    const c = stepCard('Cast it', 'Hands on'); c.append(h('div',{html:md(L.cast.task)}));
+    const box = codeBox({code:L.cast.code, inputs:L.cast.inputs||[], runLabel:'⚡ Cast', files:L.cast.files}); const nb = navBtn('Continue →', next, true);
+    box.btn.onclick = async () => { sfx.tap(); const r = await execJob(box); if (!r) return; const e = r.display.err;
+      if (e){ ctx.seenError(e.type); sfx.bad(); ctx.say(pick(LINES.err), 'shock'); } else { sfx.ok(); ctx.say(pick(LINES.ok), 'happy'); fx.burst(innerWidth/2, 300, {n:18}); }
+      if (!e || L.cast.expectError){ if (!S.ach.first_spell) award('first_spell'); rec.stepMP.cast = 1; nb.disabled = false; if (e && L.cast.expectError) c.append(h('div',{class:'note good'}, 'That error was the point. Which line number did it name?')); } };
+    c.append(box.el, h('div',{class:'nav'}, nb)); body.append(c); ui.scene.say('Your turn. Press Cast and watch.', 'idle');
+  }
+  else if (T === 'bug' || T === 'write'){
+    const spec = T === 'bug' ? {...L.bug, cases:L.bug.cases, sol:L.bug.sol, hints:L.bug.hints||['Read the task again, then compare it with what the spell prints.','Cast it and look at the checklist. Which item fails? That points at the broken part.'], inputs:L.bug.inputs||[]} : L.write;
+    const c = stepCard(T==='bug' ? '🐛 Bug Hunt' : '✍️ Write it', T==='bug' ? 'Fix the spell' : 'Your spell'); c.append(h('div',{html:md(spec.task || spec.prompt)}));
+    const nb = navBtn(T==='write' ? 'Finish lesson →' : 'Continue →', next, true);
+    const t = taskStep(spec, rec, {...ctx, onPass:st => {
+      rec.stepMP[T] = T==='bug' ? Math.max(1, 3 - Math.floor(st.fails/3)) : taskMP(4, st); if (T==='bug'){ rec.bugs++; }
+      if (T==='write'){ rec.code = st.code; if (st.fails === 0 && st.hints === 0) rec.sluggerOK = true; if (st.fails >= 5) rec.phoenix = true; } if (T==='bug' && st.fails >= 5) rec.phoenix = true;
+      nb.disabled = false; }});
+    c.append(t, h('div',{class:'nav'}, nb)); body.append(c); ui.scene.say(T==='bug' ? 'Something is broken. Find it. Read the task.' : 'Now you. From scratch. The checklist is your friend.', 'idle');
+  }
+  else if (T === 'phase'){ showPhase(s.i, ctx); }
+  else if (T === 'result'){ showGapResult(ctx); }
+  else if (T === 'power'){ showPower(ctx); }
+}
+
+/* boss + gap phases */
+function showPhase(pi, ctx){
+  const L = ui.lesson, rec = ui.rec, p = L.phases[pi], body = ui.lv.body;
+  const total = L.phases.length;
+  const c = stepCard((L.kind==='boss' ? 'Attack ' : 'Question ')+(pi+1)+' of '+total, p.type==='write' ? 'Write' : 'Choose');
+  if (L.kind==='boss'){ const hp = Math.max(0, total - pi); c.append(h('div',{class:'boss-hud'}, h('div',{class:'nm'}, h('span',null,L.boss.name), h('span',null,'HP '+hp+'/'+total)), h('div',{class:'bar'}, h('i',{style:'width:'+(hp/total*100)+'%'})))); }
+  const isLast = pi === total-1; const nb = navBtn(isLast ? (L.kind==='gap' ? 'See result →' : '⚔️ Final blow →') : 'Next →', next, true);
+  const hit = () => { if (L.kind==='boss'){ sfx.hit(); vib([20,30,40]); fx.burst(innerWidth/2, 240, {n:34, colors:['#ff5d73','#ff9f43','#fff'], spread:5}); } };
+  if (p.type === 'mcq'){
+    const gap = L.kind === 'gap';
+    c.append(mcqStep(p, rec, {...ctx, onMcq:r => {
+      const pts = r.correct ? (r.first ? 2 : 1) : 0;
+      if (gap){ rec.gap.points += pts; rec.gap.max += 2; if (!r.first) rec.gap.weak.push(...(p.tags||[])); }
+      else { rec.mp += pts; if (!r.first) {} }
+      rec.phaseMCQ = (rec.phaseMCQ||0) + 1; if (r.first) rec.phaseFirst = (rec.phaseFirst||0) + 1;
+      if (r.correct) hit(); nb.disabled = false; }}, {retry: !gap, shuffle:true, noRun:gap}));
+  } else {
+    c.append(h('div',{html:md(p.prompt)}));
+    const t = taskStep(p, rec, {...ctx, onPass:st => {
+      const base = L.kind==='gap' ? (p.pts ? p.pts*3 : 6) : 5; const pts = taskMP(base, st);
+      if (L.kind==='gap'){ rec.gap.points += Math.min(pts, base - Math.min(st.fails, base-1)); rec.gap.max += base; if (st.fails || st.hints) rec.gap.weak.push(...(p.tags||[])); } else rec.mp += pts;
+      hit(); nb.disabled = false; }});
+    c.append(t);
+  }
+  c.append(h('div',{class:'nav'}, nb)); body.append(c);
+  ui.scene.say(L.kind==='boss' ? pick(['Hit it where it hurts: with correct code.','The boss is made of bugs. Use your fundamentals.']) : 'No hints from me here. Show what you know.', 'idle');
+}
+function showGapResult(ctx){
+  const L = ui.lesson, rec = ui.rec, body = ui.lv.body; const g = rec.gap; const pct = Math.round(g.points / Math.max(1,g.max) * 100);
+  const pass = pct >= (L.passPct || 80);
+  const c = stepCard(pass ? 'Gap Check passed' : 'Training Grounds', pct+'%');
+  c.append(h('div',{class:'mpgain'}, pct+'%'));
+  if (pass){
+    sfx.level(); fx.burst(innerWidth/2, 260, {n:60, spread:6}); ctx.say('Eighty percent or more. The door opens. Annoyingly well done.', 'happy');
+    rec.gapPassed = true; c.append(h('div',{class:'note good'}, 'You passed. Your foundations are solid.'), h('div',{class:'nav'}, navBtn('Continue →', next)));
+  } else {
+    sfx.bad(); ctx.say('Not yet. A few spots need revisiting. That is what Training Grounds is for.', 'sad');
+    const weak = [...new Set(g.weak)];
+    c.append(h('div',{class:'note bad'}, 'You need '+(L.passPct||80)+'% to pass. Revisit these, then retake the trial:'));
+    const list = h('div',{style:'display:grid;gap:8px;margin:10px 0'});
+    weak.forEach(id => { const wl = LESSONS.find(x => x.id === id); if (wl) list.append(h('button',{class:'btn ghost small',type:'button',onclick:() => openLesson(wl.id, true)}, '↺ '+wl.title)); });
+    if (!weak.length) list.append(h('div',{class:'muted'}, 'Re-read the lessons in this realm.'));
+    c.append(list, h('div',{class:'nav'}, navBtn('Retake the trial ↻', () => { ui.nextIsRetake = true; openLesson(L.id, isDone(L.id)); })));
+  }
+  body.append(c);
+}
+
+/* power-up + claim */
+function showPower(ctx){
+  const L = ui.lesson, rec = ui.rec, body = ui.lv.body;
+  let mp = 0;
+  if (!L.kind || L.kind === 'normal'){ mp = (rec.stepMP.predict||0) + (rec.stepMP.cast||0) + (rec.stepMP.bug||0) + (rec.stepMP.write||0); }
+  else if (L.kind === 'boss'){ mp = rec.mp + 10; }
+  else { mp = rec.gap.points + (rec.retake ? 5 : 10); }
+  rec.total = mp;
+  const c = stepCard(L.kind==='boss' ? '🏆 Victory' : '⚡ Power-Up', 'You earned it');
+  if (L.kind === 'boss'){ sfx.level(); fx.burst(innerWidth/2, 240, {n:80, spread:7}); }
+  c.append(h('div',{class:'mpgain'}, rec.practice ? 'Practice complete' : '+'+mp+' MP'));
+  const P = L.power;
+  c.append(h('div',{class:'powers'},
+    h('div',{class:'pu'}, h('h4',null,'You can now…'), h('ul',null, P.can.map(x => h('li',null,x)))),
+    h('div',{class:'pu'}, h('h4',null,'Expand it'), h('div',{html:inlineMd(P.expand)})),
+    h('div',{class:'pu'}, h('h4',null,'Where this lives'), h('div',{html:inlineMd(P.where)})),
+    h('div',{class:'pu'}, h('h4',null,'Next door'), h('div',{html:inlineMd(P.next)}))));
+  c.append(h('div',{class:'note',html:'📖 <b>Codex card unlocked:</b> '+esc(L.codex.title)}));
+  const nextI = lessonIndex(L.id) + 1; const hasNext = nextI < LESSONS.length;
+  c.append(h('div',{class:'nav'}, h('button',{class:'btn ghost',type:'button',onclick:() => claim(false)}, '🗺️ Map'), h('button',{class:'btn',type:'button',onclick:() => claim(hasNext)}, hasNext ? 'Next lesson →' : 'Finish ✓')));
+  body.append(c); ctx.say(pick(['Look at you. A person who can do things now.','Mastery earned. Keep it.']), 'happy');
+}
+const MISSION_IDS = new Set(['r2-20','r3-25','r4-33','r4-40','r5-20','r5-21','r6-18','r6-31','r6-32','r7-22','r7-23','r7-26','r8-17','r8-30','r8-39','r8-40','r9-33','r9-40','r9-41','r9-42','r10-20','r10-28','r10-33','r11-07','r11-12','r11-18','r11-22','r12-06','r12-13','r12-24','r12-30','r12-37','r12-44','r12-51','r12-60','r12-66','r12-69','r13-08','r13-18','r13-25','r13-33','r13-56','r14-10','r14-20','r14-30','r14-40']);
+async function claim(goNext){
+  const L = ui.lesson, rec = ui.rec; if (ui.claiming) return; ui.claiming = true;
+  try {
+    if (MISSION_IDS.has(L.id) && rec.code){ S.portfolio = S.portfolio || {}; S.portfolio[L.id] = {code:rec.code, ts:Date.now()}; save(); }
+    const firstTime = !isDone(L.id);
+    const before = levelFor(S.mp);
+    if (firstTime){
+      S.mp += rec.total || 0;
+      S.done[L.id] = {mp:rec.total||0, hints:rec.hints, ts:Date.now()};
+      S.stats.bugs += rec.bugs || 0; S.stats.predictOK += rec.predictFirst || 0;
+      rec.errs.forEach(t => { if (!S.bestiary[t] && BEAST.some(x => x[0] === t)){ S.bestiary[t] = Date.now(); const b = BEAST.find(x => x[0] === t); if (b) toast(b[1], 'Bestiary: '+t, 'You have met this monster and survived.'); } });
+      if (rec.hints === 0) S.stats.clean++; else S.stats.clean = 0;
+      save();
+      if (rec.sluggerOK) award('spell_slinger'); if (rec.phoenix) award('phoenix');
+      if (S.stats.clean >= 10) award('clean_cast'); if (S.stats.bugs >= 10) award('debuggers_eye');
+      if (S.stats.predictOK >= 20) award('speed_reader'); if (BEAST.filter(x => S.bestiary[x[0]]).length >= 4) award('monster_collector');
+      if (L.id === 'r0-12'){ award('realm0'); const hs = LESSONS.filter(l => l.realm === 0).reduce((a,l) => a + ((S.done[l.id]||{}).hints||0), 0); if (hs === 0) award('no_crutches0'); }
+      if (L.id === 'r1-23') award('realm1');
+      if (L.kind === 'gap' && rec.gapPassed && !rec.retake) award('gap_free');
+      if (L.id === 'r2-20') award('hired_hand');
+      if (L.id === 'r2-21') award('realm2');
+      if (L.id === 'r3-03') award('loop_survivor');
+      if (L.id === 'r3-24') award('realm3');
+      if (L.id === 'r3-25') award('hired_hand');
+      if (L.id === 'r3-26' && rec.gapPassed) award('apprentice_seal');
+      if (L.id === 'r4-33' || L.id === 'r4-40' || L.id === 'r5-20' || L.id === 'r5-21') award('hired_hand');
+      if (S.done['r4-33'] && S.done['r4-40']) award('records_keeper');
+      if (L.id === 'r4-43') award('realm4');
+      if (L.id === 'r4-44' && rec.gapPassed) award('satchel_seal');
+      if (L.id === 'r5-20') award('pattern_hunter');
+      if (L.id === 'r5-23') award('realm5');
+      if (L.id === 'r5-24' && rec.gapPassed) award('scribe_seal');
+      if (['r6-18','r6-31','r6-32','r7-22','r7-23','r7-26','r8-17','r8-30','r8-39','r8-40','r9-33','r9-40','r9-41','r9-42','r10-20','r10-28','r10-33','r11-07','r11-12','r11-18','r11-22','r12-06','r12-13','r12-24','r12-30','r12-37','r12-44','r12-51','r12-60','r12-66','r12-69'].includes(L.id)) award('hired_hand');
+      if (L.id === 'r10-20') award('guild_banker');
+      if (L.id === 'r10-28') award('arena_master');
+      if (L.id === 'r10-34') award('realm10');
+      if (L.id === 'r10-35' && rec.gapPassed) award('guildhall_seal');
+      if (L.id === 'r11-07') award('quest_keeper');
+      if (L.id === 'r11-12') award('stream_smith');
+      if (L.id === 'r11-23') award('realm11');
+      if (L.id === 'r11-24' && rec.gapPassed) award('gate_seal');
+      if (L.id === 'r12-06') award('dep_auditor');
+      if (L.id === 'r12-13') award('mini_git');
+      if (L.id === 'r12-24') award('bug_zookeeper');
+      if (L.id === 'r12-30') award('spell_linter');
+      if (L.id === 'r12-37') award('toolsmith');
+      if (L.id === 'r12-44') award('api_whisperer');
+      if (L.id === 'r12-51') award('data_wrangler');
+      if (L.id === 'r12-60') award('guild_librarian');
+      if (L.id === 'r12-66') award('night_watch');
+      if (L.id === 'r12-69') award('gatewright');
+      if (L.id === 'r12-70') award('realm12');
+      if (L.id === 'r12-71' && rec.gapPassed) award('master_gate_seal');
+      if (MISSION_IDS.has(L.id)) award('hired_hand');
+      if (L.id === 'r13-08') award('ledger_fixer');
+      if (L.id === 'r13-18') award('autocomplete_oracle');
+      if (L.id === 'r13-25') award('lag_hunter');
+      if (L.id === 'r13-33') award('arena_architect');
+      if (L.id === 'r13-56') award('page_publisher');
+      if (L.id === 'r13-51' && S.done['r13-50']) award('interview_survivor');
+      if (L.id === 'r13-57') award('realm13');
+      if (L.id === 'r13-58' && rec.gapPassed){ award('arena_seal'); award('archmage'); }
+      if (L.id === 'r14-10') award('clockmaker');
+      if (L.id === 'r14-20') award('server_smith');
+      if (L.id === 'r14-30') award('data_diviner');
+      if (L.id === 'r14-40') award('taskmaster');
+      if (L.id === 'r14-41') award('realm14');
+      if (L.id === 'r14-42' && rec.gapPassed){ award('doors_seal'); if (['r14-10','r14-20','r14-30','r14-40'].every(i => S.done[i])) award('guildmaster'); }
+      if (L.id === 'r6-35') award('realm6');
+      if (L.id === 'r6-36' && rec.gapPassed) award('forge_seal');
+      if (L.id === 'r7-07') award('memo_mage');
+      if (L.id === 'r7-26') award('journeyman_seal');
+      if (L.id === 'r7-27') award('realm7');
+      if (L.id === 'r7-28' && rec.gapPassed) award('ward_seal');
+      if (L.id === 'r8-30') award('csv_cartographer');
+      if (L.id === 'r8-41') award('realm8');
+      if (L.id === 'r8-42' && rec.gapPassed) award('archive_seal');
+      if (L.id === 'r9-40') award('time_lord');
+      if (L.id === 'r9-42') award('exact_cent');
+      if (L.id === 'r9-43') award('realm9');
+      if (L.id === 'r9-44' && rec.gapPassed) award('workshop_seal');
+    }
+    renderHUD();
+    const after = levelFor(S.mp);
+    for (let l = before+1; l <= after; l++){ if (l === 2) award('level2'); await levelUp(l); }
+    if (goNext){ const ni = lessonIndex(L.id)+1; if (ni < LESSONS.length && isUnlocked(ni)){ ui.claiming = false; return openLesson(LESSONS[ni].id); } }
+    ui.claiming = false; go('map');
+  } finally { ui.claiming = false; }
+}
+function levelUp(l){
+  sfx.level(); vib([30,40,30,40,60]); fx.burst(innerWidth/2, innerHeight/2.4, {n:140, spread:9, up:3});
+  const rankUp = rankFor(l) !== rankFor(l-1);
+  return modal(close => h('div',null,
+    h('div',{class:'tag'}, rankUp ? 'NEW RANK: '+rankFor(l).toUpperCase() : 'LEVEL UP'),
+    h('div',{class:'big'}, String(l)), h('h2',null, LEVELS[l-1][0]),
+    h('div',{class:'analogy',style:'text-align:left'}, h('b',null,'You can now: '), LEVELS[l-1][1]),
+    h('div',{style:'text-align:left;margin-top:8px'}, h('b',null,'Try building:'), h('ul',null, (BUILD[l]||['Combine what you learned into a small program of your own','Re-read an old spell and improve it','Teach one concept to a friend']).map(x => h('li',null,x)))),
+    h('button',{class:'btn block',type:'button',onclick:() => { sfx.tap(); close(); }}, 'Keep going →')));
+}
+
+/* ---------- views ---------- */
+function render(){
+  const v = $('#view'); v.innerHTML = '';
+  renderHUD(); renderDock();
+  const fn = VIEWS[ui.view] || VIEWS.map; fn(v);
+}
+function downloadFile(name, text, mime){
+  try { const blob = new Blob([text], {type:mime}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { try { URL.revokeObjectURL(a.href); a.remove(); } catch(e){} }, 800); return true; } catch(e){ return false; }
+}
+function escHtml(t){ return String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function buildPortfolioHTML(items){
+  const who = escHtml(S.name || 'A Spellbook Student'), lv = levelFor(S.mp);
+  const date = new Date().toISOString().slice(0,10);
+  const cards = items.map(l => {
+    const rec = S.portfolio[l.id], title = escHtml(l.title.replace(/^Real-World Mission:\s*/,''));
+    const can = (l.power && l.power.can || []).map(x => '<li>'+escHtml(x)+'</li>').join('');
+    return '<section><h2>'+title+'</h2><p class="story">'+escHtml(l.write && l.write.prompt ? l.write.prompt.replace(/`/g,'') : '')+'</p>'+(can ? '<h3>What this proves</h3><ul>'+can+'</ul>' : '')+'<h3>My solution</h3><pre><code>'+escHtml(rec.code)+'</code></pre></section>';
+  }).join('\n');
+  return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+who+' · Python portfolio</title>'
+    +'<style>:root{color-scheme:light dark;--bg:#fbfaff;--fg:#1c1840;--card:#fff;--line:#d9d4f2;--acc:#5a37c9;--code:#f1eefc}@media(prefers-color-scheme:dark){:root{--bg:#120f2c;--fg:#ece8ff;--card:#1b1740;--line:#352d70;--acc:#b9a4ff;--code:#0d0a24}}'
+    +'body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,sans-serif}main{max-width:760px;margin:0 auto;padding:24px 16px 60px}h1{font-size:30px;margin:8px 0}h2{font-size:21px;margin:0 0 6px;color:var(--acc)}h3{font-size:14px;text-transform:uppercase;letter-spacing:.06em;margin:16px 0 4px}'
+    +'section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:16px 0}.story{color:inherit;opacity:.8;margin:0}pre{background:var(--code);border-radius:10px;padding:12px;overflow:auto;font-size:13px;line-height:1.45}.meta{opacity:.75}</style></head>'
+    +'<body><main><h1>'+who+'\u2019s Python portfolio</h1><p class="meta">Built with Spellbook Syntax · Level '+lv+' ('+escHtml(LEVELS[lv-1][0])+') · '+items.length+' project'+(items.length>1?'s':'')+' · '+date+'</p>'+cards+'<p class="meta">Every program above was written by me and passes its own automated checks.</p></main></body></html>';
+}
+const VIEWS = {
+  welcome(v){
+    const sc = makeScene(0); const input = h('input',{type:'text',placeholder:'Your name (or a hero name)',maxlength:'20',value:S.name||'','aria-label':'Your name'});
+    v.append(h('div',{class:'view'},
+      h('h1',{style:'font-size:34px;text-align:center;margin:18px 0 4px;color:var(--gold)'}, 'SPELLBOOK SYNTAX'),
+      h('p',{class:'muted',style:'text-align:center;margin:0 0 14px'}, 'Learn real Python by casting it. Zero to job-ready, one spell at a time.'),
+      sc,
+      h('div',{class:'card'}, h('h2',null,'Who is opening the book?'), input, h('div',{style:'height:12px'}), h('button',{class:'btn block',type:'button',onclick:() => { S.name = (input.value||'').trim().slice(0,20) || 'Apprentice'; save(); sfx.tap(); go('map'); }}, 'Open the Spellbook ✨'),
+        h('p',{class:'muted',style:'font-size:13px;margin-top:10px'}, 'Everything you run is real Python. Progress saves on this device.'))));
+    sc.say('Ah, you found me. Or I found you. **Name**, please? I need something to put on the paperwork.', 'happy');
+  },
+  map(v){
+    const root = h('div',{class:'view'}); const ci = currentLessonIdx(); const sc = makeScene(ci < LESSONS.length ? LESSONS[ci].realm : 14);
+    const lv = levelFor(S.mp);
+    root.append(sc, h('div',{class:'hero'}, h('h1',null, ci===0 ? 'Welcome, '+(S.name||'Apprentice') : 'Welcome back, '+(S.name||'Apprentice')), h('p',{class:'sub'}, 'Level '+lv+' · '+LEVELS[lv-1][0]+' · '+rankFor(lv)+' rank')));
+    if (ci < LESSONS.length){ const L = LESSONS[ci]; root.append(h('button',{class:'btn block',type:'button',onclick:() => { sfx.tap(); openLesson(L.id); }}, '▶ '+(ci===0?'Start':'Continue')+': '+L.title)); sc.say(ci===0 ? 'Ready when you are. First lesson is short. I promise. Mostly.' : 'Back for more. Good. The Null does not sleep, and neither does the syllabus.', 'idle'); }
+    else { root.append(h('div',{class:'card ending'}, h('h2',null,'🧙 Archmage of Python'), h('p',null,'You did it, '+(S.name||'Archmage')+'. From your first print to Big-O, data structures, clean architecture, interview patterns and a finished portfolio: all fifty-four levels, all fourteen realms. You can write, test, document, optimise and ship real Python, and you chose your own specialities in async, web, data and craft.'), h('p',{class:'muted'},'What now? Export your finished missions as a portfolio page, put it on GitHub Pages or in your CV, and build something that matters to you. Keep the Echoes going so the skills never fade.'), h('button',{class:'btn block',type:'button',onclick:() => { sfx.tap(); go('portfolio'); }}, '📁 Open my Portfolio'))); sc.say('That is the whole book. I am not crying. A bug flew into my eye. Go build something wonderful.', 'happy'); }
+    const realms = [[0,'The Awakening'],[1,'Cantrips: Values & Variables'],[2,'Runes of Choice: Decisions'],[3,'Loops of Repetition'],[4,'The Satchel: Collections'],[5,'Scrolls & Ink: Text'],[6,'The Spell Forge: Functions'],[7,'The Wards: Recursion & Errors'],[8,'The Archive: Files, CSV & JSON'],[9,'The Workshop: Modules & the Standard Library'],[10,'The Guildhall: Classes & Objects'],[11,'The Iterator Gate: Dataclasses, Generators & Decorators'],[12,'The Master Gate: Tools of the Professional'],[13,'The Interview Arena: Algorithms, Design & Portfolio'],[14,'The Four Doors: Async, Web, Data & Craft']];
+    realms.forEach(([r,name]) => {
+      const ls = LESSONS.map((l,i) => [l,i]).filter(([l]) => l.realm === r); const done = ls.filter(([l]) => isDone(l.id)).length;
+      const nodes = h('div',{class:'nodes'});
+      ls.forEach(([l,i]) => { const unlocked = isUnlocked(i), d = isDone(l.id), cur = i === ci;
+        nodes.append(h('button',{class:'node '+(d?'done ':'')+(cur?'cur ':'')+(!unlocked?'locked ':'')+(l.kind?'boss':''),type:'button','aria-label':l.title,title:l.title,onclick:() => { if (!unlocked){ sfx.bad(); sc.say('Locked. Finish the one before it first.', 'sad'); return; } sfx.tap(); openLesson(l.id); }}, l.kind==='boss' ? '⚔️' : l.kind==='gap' ? '🗝️' : String(l.n), d ? h('small',null,'✔') : null)); });
+      root.append(h('div',{class:'realm'}, h('h3',null,'Realm '+r+': '+name, h('small',null,done+'/'+ls.length)), nodes));
+    });
+    if (S.portfolio && Object.keys(S.portfolio).length) root.append(h('button',{class:'btn ghost block',type:'button',onclick:() => { sfx.tap(); go('portfolio'); }}, '📁 My Portfolio ('+Object.keys(S.portfolio).length+' missions saved)'));
+    v.append(root);
+  },
+  echo(v){
+    const root = h('div',{class:'view'}); v.append(root);
+    const doneN = LESSONS.filter(l => isDone(l.id)).length;
+    root.append(h('h1',{style:'font-size:24px;margin:8px 2px'}, '🔔 Echoes'), h('p',{class:'muted',style:'margin:0 2px 8px'}, 'Quick review of things you already learned. Spaced review is how skills stick. Earlier material is worth the most.'));
+    if (doneN < 3){ root.append(h('div',{class:'card'}, h('p',null,'Finish at least 3 lessons to unlock Echoes.'), h('button',{class:'btn',onclick:() => go('map')}, 'Back to the map'))); return; }
+    const today = todayStr(); if (S.echo.day !== today){ S.echo = {day:today, n:0}; save(); }
+    const left = Math.max(0, 5 - S.echo.n);
+    root.append(h('div',{class:'card'}, h('h2',null,'Today\'s Echoes'), h('p',{class:'muted'}, left ? 'You can still earn MP on '+left+' more question'+(left===1?'':'s')+' today (+3 each).' : 'Daily MP is capped. You can still practice for fun.'), h('button',{class:'btn block',type:'button',onclick:() => startEcho(root)}, '⚡ Start 5 Echoes')));
+  },
+  codex(v){
+    const root = h('div',{class:'view'}); v.append(root);
+    root.append(h('h1',{style:'font-size:24px;margin:8px 2px'}, '📖 Codex'), h('p',{class:'muted',style:'margin:0 2px 8px'}, 'Every lesson adds a reference card. Tap a card to read it.'));
+    const list = h('div',{style:'display:grid;gap:10px'});
+    LESSONS.forEach(L => { const d = isDone(L.id);
+      const card = h('div',{class:'cx '+(d?'':'locked')}, h('h4',null, d ? L.codex.title : '??? Locked'), h('div',{class:'meta'}, 'Realm '+L.realm+' · Lesson '+L.n));
+      if (d){ const det = h('div',{style:'display:none;margin-top:8px'}, h('div',{html:inlineMd(L.codex.body)}), h('pre',{class:'codeblk',html:hl(L.codex.snip)}), h('button',{class:'btn ghost small',type:'button',onclick:e => { e.stopPropagation(); openLesson(L.id, true); }}, '↺ Replay lesson'));
+        card.append(det); card.style.cursor = 'pointer'; card.onclick = () => { const open = det.style.display === 'none'; det.style.display = open ? 'block' : 'none'; if (open && !S.codexSeen[L.id]){ S.codexSeen[L.id] = 1; S.stats.codex++; save(); if (S.stats.codex >= 10) award('codex_keeper'); } sfx.tap(); }; }
+      list.append(card); });
+    root.append(list);
+  },
+  trophies(v){
+    const root = h('div',{class:'view'}); v.append(root);
+    const lv = levelFor(S.mp), a = lvStart(lv), b = lvStart(lv+1);
+    root.append(h('div',{class:'card'}, h('div',{class:'tag'}, rankFor(lv)+' rank'), h('h2',{style:'margin-top:6px;font-size:22px'}, 'Level '+lv+': '+LEVELS[lv-1][0]), h('p',null, h('b',null,'You can now: '), LEVELS[lv-1][1]), h('div',{class:'bar'}, h('i',{style:'width:'+clamp((S.mp-a)/(b-a)*100,0,100)+'%'})), h('p',{class:'muted',style:'font-size:13px'}, (lv >= 54 ? 'Maximum level reached. Mastery Points still count: keep earning them in Echoes.' : (b - S.mp)+' MP to Level '+(lv+1)+' ('+LEVELS[lv][0]+'). Mastery Points come from first-try passes, fewer hints, bosses and Echoes.'))));
+    root.append(h('h3',{style:'margin:14px 2px 6px'}, 'Level ladder'));
+    const lad = h('div',{class:'ladder'}); for (let l=1; l<=8; l++) lad.append(h('div',{class:'lv '+(lv>=l?'have ':'')+(lv===l?'cur':'')}, h('div',{class:'n'}, String(l)), h('div',null, h('b',null,LEVELS[l-1][0]), h('div',{class:'muted',style:'font-size:12px'}, LEVELS[l-1][1]))));
+    lad.append(h('div',{class:'muted',style:'font-size:12px;padding:4px 6px'}, 'Levels 9–50 unlock in later stages: lists, functions, files, classes, testing, APIs, data, algorithms…')); root.append(lad);
+    root.append(h('h3',{style:'margin:16px 2px 6px'}, 'Achievements '+Object.keys(S.ach).length+'/'+ACH.length));
+    ACH.forEach(a => { const have = !!S.ach[a.id]; if (a.secret && !have){ root.append(h('div',{class:'ach'}, h('div',{class:'ic'},'❔'), h('div',null, h('h4',null,'Secret achievement'), h('div',{class:'d'},'Keep exploring…')))); return; }
+      root.append(h('div',{class:'ach '+a.t+' '+(have?'have':'')}, h('div',{class:'ic'}, a.ic), h('div',null, h('h4',null,a.n+(have?' ✓':'')), h('div',{class:'d'},a.d), h('div',{class:'pr'},'Proves: '+a.p)))); });
+    if (ACH_FUTURE.length) root.append(h('h3',{style:'margin:16px 2px 6px'}, 'Coming in later stages'));
+    ACH_FUTURE.forEach(([n,d]) => root.append(h('div',{class:'ach'}, h('div',{class:'ic'},'🔒'), h('div',null, h('h4',null,n), h('div',{class:'d'},d)))));
+    root.append(h('h3',{style:'margin:16px 2px 6px'}, 'Bug Bestiary '+BEAST.filter(x => S.bestiary[x[0]]).length+'/'+BEAST.length), h('p',{class:'muted',style:'margin:0 2px 8px;font-size:13px'}, 'Meet an error and survive the lesson to add it.'));
+    const g = h('div',{class:'grid2'}); BEAST.forEach(([n,e]) => { const have = !!S.bestiary[n]; g.append(h('div',{class:'mon '+(have?'have':'')}, h('div',{class:'e'},e), h('div',null, have ? n : '???'))); }); root.append(g);
+  },
+  more(v){
+    const root = h('div',{class:'view'}); v.append(root);
+    root.append(h('h1',{style:'font-size:24px;margin:8px 2px'}, '⚙️ More'),
+      h('div',{class:'card'}, h('h2',null,'🧪 Sandbox'), h('p',{class:'muted'}, 'Free play. Run any Python you like, no checks, no pressure.'), h('button',{class:'btn block',type:'button',onclick:() => go('sandbox')}, 'Open the Sandbox')),
+      h('div',{class:'card'}, h('h2',null,'📁 Portfolio'), h('p',{class:'muted'}, 'Turn your finished Real-World Missions into a page you can share.'), h('button',{class:'btn block',type:'button',onclick:() => go('portfolio')}, 'Open my Portfolio')),
+      h('div',{class:'card'}, h('h2',null,'🛠️ Settings'), h('button',{class:'btn ghost block',type:'button',onclick:() => go('settings')}, 'Sound, name, save code, reset')),
+      h('div',{class:'card'}, h('h2',null,'About'), h('p',{class:'muted'}, 'Spellbook Syntax · Stage 9 (Realms 0–14, 532 lessons; the first 84 are the free demo). Real Python runs in your browser via Pyodide. First load downloads the Python engine once.')));
+  },
+  portfolio(v){
+    const root = h('div',{class:'view'}); v.append(root);
+    root.append(h('div',{class:'row',style:'justify-content:space-between'}, h('h1',{style:'font-size:24px;margin:8px 2px'}, '📁 Portfolio'), h('button',{class:'btn ghost small',onclick:() => go('more')}, '← Back')));
+    root.append(h('p',{class:'muted',style:'margin:0 2px 10px'}, 'Pick your best finished missions. The export is one web page with your name, your code and what each project proves. Open it, host it free, or put it in your CV. Finish 3 or more to earn Portfolio Ready.'));
+    const missions = LESSONS.filter(l => MISSION_IDS.has(l.id) && isDone(l.id));
+    const saved = missions.filter(l => S.portfolio && S.portfolio[l.id]);
+    const chosen = new Set(saved.map(l => l.id));
+    const out = h('div'); const exportBtn = h('button',{class:'btn block',type:'button'}, 'Export my portfolio');
+    const sync = () => { exportBtn.disabled = chosen.size === 0; exportBtn.textContent = chosen.size ? 'Export '+chosen.size+' mission'+(chosen.size>1?'s':'')+' as a web page' : 'Pick at least one mission'; };
+    if (!missions.length) root.append(h('div',{class:'card'}, h('p',null,'No finished missions yet. Look for lessons titled "Real-World Mission" on the map. Each one you finish is saved here with your own solution.')));
+    missions.forEach(l => {
+      const have = S.portfolio && S.portfolio[l.id];
+      if (have){
+        const cb = h('input',{type:'checkbox',checked:'checked','aria-label':l.title}); cb.checked = true;
+        cb.onchange = () => { cb.checked ? chosen.add(l.id) : chosen.delete(l.id); sync(); };
+        root.append(h('label',{class:'card row',style:'gap:10px;align-items:flex-start;cursor:pointer'}, cb, h('div',null, h('b',null,l.title.replace(/^Real-World Mission:\s*/,'')), h('div',{class:'muted',style:'font-size:12px'}, (l.power && l.power.can ? l.power.can.join(' · ') : '')))));
+      } else {
+        root.append(h('div',{class:'card row',style:'justify-content:space-between;gap:10px'}, h('div',null, h('b',null,l.title.replace(/^Real-World Mission:\s*/,'')), h('div',{class:'muted',style:'font-size:12px'},'Finished before portfolios existed. Replay it once to save your code.')), h('button',{class:'btn ghost small',type:'button',onclick:() => { sfx.tap(); openLesson(l.id); }}, 'Replay')));
+      }
+    });
+    if (missions.length) root.append(exportBtn, out);
+    sync();
+    exportBtn.onclick = () => {
+      const items = LESSONS.filter(l => chosen.has(l.id) && S.portfolio && S.portfolio[l.id]);
+      if (!items.length) return;
+      const html = buildPortfolioHTML(items); sfx.tap();
+      const ok = downloadFile('my-python-portfolio.html', html, 'text/html');
+      out.innerHTML = '';
+      const ta = h('textarea',{class:'field',readonly:'readonly',spellcheck:'false','aria-label':'Portfolio HTML',style:'min-height:120px;margin-top:10px'}); ta.value = html;
+      out.append(h('div',{class:'note good'}, ok ? 'Saved as my-python-portfolio.html. If nothing downloaded, copy the page text below and save it as a .html file.' : 'Copy the page text below and save it as my-python-portfolio.html.'), ta,
+        h('button',{class:'btn ghost small',type:'button',style:'margin-top:8px',onclick:() => { ta.select(); try { navigator.clipboard && navigator.clipboard.writeText(ta.value); } catch(e){} }}, 'Copy page text'));
+      if (items.length >= 3) award('portfolio_ready');
+    };
+  },
+  sandbox(v){
+    const root = h('div',{class:'view'}); v.append(root);
+    const box = codeBox({code:'# Free play. Write anything.\nprint("Hello, Verith")\n', runLabel:'⚡ Cast'});
+    box.btn.onclick = async () => { sfx.tap(); const r = await execJob(box); if (!r) return; if (!r.display.err){ sfx.ok(); if (!S.ach.first_spell) award('first_spell'); } else sfx.bad(); S.stats.sandbox++; save(); if (S.stats.sandbox >= 10) award('sandbox_tinkerer'); };
+    root.append(h('div',{class:'row',style:'justify-content:space-between'}, h('h1',{style:'font-size:24px;margin:8px 2px'}, '🧪 Sandbox'), h('button',{class:'btn ghost small',onclick:() => go('more')}, '← Back')), box.el);
+  },
+  settings(v){
+    const root = h('div',{class:'view settings'}); v.append(root);
+    const tgl = (label, key) => { const sw = h('button',{class:'switch '+(S.settings[key]?'on':''),type:'button','aria-label':label,onclick:() => { S.settings[key] = !S.settings[key]; save(); sw.classList.toggle('on', S.settings[key]); renderHUD(); }}); return h('div',{class:'row'}, h('span',null,label), sw); };
+    const nameIn = h('input',{type:'text',value:S.name||'',maxlength:'20','aria-label':'Name'});
+    const codeTa = h('textarea',{class:'field',spellcheck:'false','aria-label':'Save code'}); codeTa.value = '';
+    const msg = h('div',{class:'muted',style:'font-size:13px;margin-top:6px'});
+    root.append(h('div',{class:'row',style:'justify-content:space-between'}, h('h1',{style:'font-size:24px;margin:8px 2px'}, '🛠️ Settings'), h('button',{class:'btn ghost small',onclick:() => go('more')}, '← Back')),
+      h('div',{class:'card'}, tgl('Sound effects','sound'), tgl('Vibration','vib'), h('div',{style:'height:10px'}), h('label',{class:'muted',style:'font-size:13px'},'Your name'), nameIn, h('div',{style:'height:8px'}), h('button',{class:'btn small',onclick:() => { S.name = nameIn.value.trim().slice(0,20) || 'Apprentice'; save(); renderHUD(); msg.textContent = 'Saved.'; }}, 'Save name')),
+      h('div',{class:'card'}, h('h2',null,'Save code'), h('p',{class:'muted',style:'font-size:13px'}, 'Progress lives on this device. Copy your save code to move it to another device or keep a backup.'),
+        h('button',{class:'btn ghost small',type:'button',onclick:() => { try { codeTa.value = btoa(unescape(encodeURIComponent(JSON.stringify(S)))); codeTa.select(); try { navigator.clipboard && navigator.clipboard.writeText(codeTa.value); msg.textContent = 'Copied. Keep it somewhere safe.'; } catch(e){ msg.textContent = 'Select and copy the code above.'; } } catch(e){ msg.textContent = 'Could not make a code.'; } }}, 'Export my save'),
+        h('div',{style:'height:8px'}), codeTa, h('div',{style:'height:8px'}),
+        h('button',{class:'btn ghost small',type:'button',onclick:() => { try { const o = JSON.parse(decodeURIComponent(escape(atob(codeTa.value.trim())))); if (!o || o.v !== 1 || typeof o.mp !== 'number' || typeof o.done !== 'object') throw 0; S = Object.assign(defaults(), o); save(); msg.textContent = 'Imported!'; renderHUD(); } catch(e){ msg.textContent = 'That code did not work. Paste the whole thing.'; } }}, 'Import a save'), msg),
+      h('div',{class:'card'}, h('h2',null,'Reset'), h('p',{class:'muted',style:'font-size:13px'}, 'Erase all progress on this device. Cannot be undone.'),
+        (() => { const b = h('button',{class:'btn ghost small',type:'button'}, 'Reset everything'); b.onclick = () => { if (!b.dataset.armed){ b.dataset.armed = '1'; b.textContent = 'Tap again to erase everything'; setTimeout(() => { delete b.dataset.armed; b.textContent = 'Reset everything'; }, 3500); return; } S = defaults(); save(); go('welcome'); }; return b; })()));
+  },
+  lesson(v){ if (ui.lv) v.append(ui.lv.root); else go('map'); },
+};
+
+/* ---------- Echoes ---------- */
+function echoPool(){
+  const pool = [];
+  LESSONS.forEach(L => { if (!isDone(L.id)) return;
+    if (L.predict && L.predict.opts) pool.push({key:L.id+':p', L, q:L.predict});
+    (L.phases||[]).forEach((p,i) => { if (p.type === 'mcq') pool.push({key:L.id+':'+i, L, q:p}); }); });
+  return pool;
+}
+function startEcho(root){
+  const pool = echoPool().sort((a,b) => ((S.echoSeen[a.key]||0) - (S.echoSeen[b.key]||0)) || (Math.random()-.5)).slice(0, 12);
+  const qs = shuffle(pool).slice(0,5); let i = 0, right = 0, gained = 0;
+  const maxRealm = Math.max(...LESSONS.filter(l => isDone(l.id)).map(l => l.realm));
+  function show(){
+    root.innerHTML = '';
+    if (i >= qs.length){
+      root.append(h('div',{class:'card',style:'text-align:center'}, h('h2',null,'Echoes done'), h('div',{class:'mpgain'}, '+'+gained+' MP'), h('p',null, right+' of '+qs.length+' correct.'), h('button',{class:'btn block',onclick:() => { go('echo'); }}, 'Done'))); return; }
+    const e = qs[i]; const nb = navBtn(i === qs.length-1 ? 'Finish' : 'Next →', () => { i++; show(); }, true);
+    const c = h('div',{class:'card'}, h('div',{class:'steptitle'}, h('h2',null,'Echo '+(i+1)+' of '+qs.length), h('span',{class:'tag'}, 'Realm '+e.L.realm)));
+    const dummy = {say:() => {}};
+    c.append(mcqStep(e.q, {}, {...dummy, onMcq:async r => {
+      S.echoSeen[e.key] = Date.now();
+      if (r.correct && r.first){ right++; S.stats.echoOK++; if (S.stats.echoOK >= 10) award('echo_keeper'); if (longGap) award('welcome_back'); }
+      if (r.correct && r.first && S.echo.n < 5){ const g = 3 + (e.L.realm < maxRealm ? 1 : 0); S.mp += g; gained += g; S.echo.n++; const before = levelFor(S.mp - g); save(); renderHUD(); const after = levelFor(S.mp); toast('🔔','+'+g+' MP','Echo mastered'); for (let l=before+1; l<=after; l++){ if (l===2) award('level2'); await levelUp(l); } }
+      else save();
+      nb.disabled = false; }}, {retry:false, shuffle:true}), h('div',{class:'nav'}, nb));
+    root.append(c);
+  }
+  show();
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  fx.init(); Py.init();
+  ui.view = S.name ? 'map' : 'welcome';
+  render();
+}
+boot();
+// test hook
+window.__SB__ = {S:()=>S, ui, LESSONS, go, openLesson, render, Py, levelFor, claim};
+})();
+</script>
+</body>
+</html>
